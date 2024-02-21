@@ -1,12 +1,12 @@
-<<div align="center">
+<div align="center">
   <img alt="BARK Wallet App Hero" src="https://github.com/bark-community/bark-wallet/public/images/github-hero.png">
 </div>
 
-<div align="center"><strong>BARK Wallet dApp</strong></div>
+<br>
 
+<h1 align="center">BARK Wallet dApp</h1>
 
-<div align="center"><strong>BARK Wallet is a secure and user-friendly wallet designed for managing BARK tokens on the Solana blockchain. It provides a seamless experience for users within the Solana ecosystem, allowing them to create and manage wallets, conduct secure BARK token transactions, integrate with Solana-based decentralized finance (DeFi) applications, and even swap tokens directly within the wallet interface.</div>
-
+<p align="center"><strong>BARK Wallet is a secure and user-friendly wallet designed for managing BARK tokens on the Solana blockchain. It provides a seamless experience for users within the Solana ecosystem, allowing them to create and manage wallets, conduct secure BARK token transactions, integrate with Solana-based decentralized finance (DeFi) applications, and even swap tokens directly within the wallet interface.</strong></p>
 
 
 ## Table of Contents
