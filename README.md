@@ -1,5 +1,5 @@
 <div align="center">
-  <img alt="BARK Wallet App Hero" src="https://github.com/bark-community/bark-wallet/public/images/github-hero.png">
+  <img alt="BARK Wallet App Hero" src="https://github.com/bark-community/bark-wallet/public/images/bark-wallet-header-light.svg">
 </div>
 
 <br>
