@@ -8,6 +8,7 @@
 
 <p align="center"><strong>BARK Wallet is a secure and user-friendly wallet designed for managing BARK tokens on the Solana blockchain. It provides a seamless experience for users within the Solana ecosystem, allowing them to create and manage wallets, conduct secure BARK token transactions, integrate with Solana-based decentralized finance (DeFi) applications, and even swap tokens directly within the wallet interface.</strong></p>
 
+<br>
 
 ## Table of Contents
 - [Table of Contents](#table-of-contents)
