@@ -1,34 +1,33 @@
-<div align="center">
-  <img alt="BARK Wallet Hero" src="<Banner Image URL>">
+<<div align="center">
+  <img alt="BARK Wallet App Hero" src="https://github.com/bark-community/bark-wallet/public/images/github-hero.png">
 </div>
 
-# BARK Wallet
+<div align="center"><strong>BARK Wallet dApp</strong></div>
 
 BARK Wallet is a secure and user-friendly wallet designed for managing BARK tokens on the Solana blockchain. It provides a seamless experience for users within the Solana ecosystem, allowing them to create and manage wallets, conduct secure BARK token transactions, integrate with Solana-based decentralized finance (DeFi) applications, and even swap tokens directly within the wallet interface.
 
 ## Table of Contents
-- [BARK Wallet](#bark-wallet)
-  - [Table of Contents](#table-of-contents)
-  - [Demo](#demo)
-  - [Documentation](#documentation)
-  - [Overview](#overview)
-  - [Getting Started](#getting-started)
-  - [Introduction](#introduction)
-  - [Features:](#features)
-    - [Wallet Creation and Management](#wallet-creation-and-management)
-    - [Transactions](#transactions)
-    - [Transaction History](#transaction-history)
-    - [Integration with Solana Ecosystem](#integration-with-solana-ecosystem)
-    - [Swap Feature](#swap-feature)
-      - [Key Highlights:](#key-highlights)
-      - [How to Use the Swap Feature:](#how-to-use-the-swap-feature)
-      - [Swap Feature Benefits:](#swap-feature-benefits)
-  - [Technology Stack](#technology-stack)
-  - [Additional Components](#additional-components)
-  - [Contributing](#contributing)
-  - [Troubleshooting](#troubleshooting)
-  - [Acknowledgments](#acknowledgments)
-  - [License](#license)
+- [Table of Contents](#table-of-contents)
+- [Demo](#demo)
+- [Documentation](#documentation)
+- [Overview](#overview)
+- [Getting Started](#getting-started)
+- [Introduction](#introduction)
+- [Features:](#features)
+  - [Wallet Creation and Management](#wallet-creation-and-management)
+  - [Transactions](#transactions)
+  - [Transaction History](#transaction-history)
+  - [Integration with Solana Ecosystem](#integration-with-solana-ecosystem)
+  - [Swap Feature](#swap-feature)
+    - [Key Highlights:](#key-highlights)
+    - [How to Use the Swap Feature:](#how-to-use-the-swap-feature)
+    - [Swap Feature Benefits:](#swap-feature-benefits)
+- [Technology Stack](#technology-stack)
+- [Additional Components](#additional-components)
+- [Contributing](#contributing)
+- [Troubleshooting](#troubleshooting)
+- [Acknowledgments](#acknowledgments)
+- [License](#license)
 
 ## Demo
 
