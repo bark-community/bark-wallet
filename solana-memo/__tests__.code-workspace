@@ -1,0 +1,21 @@
+{
+	"folders": [
+		{
+			"name": "__tests__",
+			"path": "../../../../Downloads/FiMs-Wallet-main/__tests__"
+		},
+		{
+			"name": "app",
+			"path": "../../../../Downloads/FiMs-Wallet-main/app"
+		},
+		{
+			"name": "public",
+			"path": "../../../../Downloads/FiMs-Wallet-main/public"
+		},
+		{
+			"name": "bark-wallet",
+			"path": ".."
+		}
+	],
+	"settings": {}
+}
