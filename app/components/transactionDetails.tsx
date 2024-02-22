@@ -22,43 +22,38 @@ const t: Dataset = {
 export const TransactionDetails = ({ transaction }: { transaction: Transaction }) => {
   const { closePopup } = usePopup();
 
+  const renderTransactionDetail = (item: string, index: number) => {
+    if (transaction[item] !== undefined && (transaction.type !== TransactionType.donation || item !== 'cost')) {
+      const isNumeric = !isNaN(Number(transaction[item]));
+
+      return (
+        <ListItem key={index}>
+          <span>{t[item]}</span>
+          <span className={cls('font-bold', isNumeric ? (Number(transaction[item]) >= 0 ? 'text-green-400' : 'text-red-400') : '')}>
+            {isNumeric ? Number(transaction[item]).toLocaleCurrency() : String(transaction[item])}
+          </span>
+        </ListItem>
+      );
+    }
+
+    return null;
+  };
+
   return (
     <>
       <Title className="text-center mb-2">
-        {t[TransactionType[transaction.type ?? 0]]} {t.from} {transaction.date}
+        {t[TransactionType[transaction.type ?? 0]]} {t.from} {transaction.date.toShortDate()}
       </Title>
-      <List>
-        {['movement', 'cost', 'token', 'rate'].map((item, index) =>
-          transaction[item] ? (
-            <ListItem key={index}>
-              {transaction.type !== TransactionType.donation || item !== 'cost' ? (
-                <>
-                  <span>{t[item]}</span>
-                  <span
-                    className={cls(
-                      'font-bold',
-                      !isNaN(Number(transaction[item]))
-                        ? Number(transaction[item]) >= 0
-                          ? 'text-grey-400'
-                          : 'text-red-400'
-                        : '',
-                    )}
-                  >
-                    {isNaN(Number(transaction[item]))
-                      ? transaction[item]
-                      : Number(transaction[item]).toLocaleCurrency()}
-                  </span>
-                </>
-              ) : null}
-            </ListItem>
-          ) : null,
-        )}
-      </List>
+      <List>{['movement', 'cost', 'token', 'rate'].map(renderTransactionDetail)}</List>
       <Flex justifyContent="center" className="mt-6">
-        <Button className="font-bold" style={{ borderRadius: 16 }} onClick={closePopup}>
+        <Button className="font-bold" style={{ borderRadius: 24 }} onClick={closePopup}>
           {t.close}
         </Button>
       </Flex>
+    </>
+  );
+};
+
     </>
   );
 };
