@@ -1,6 +1,6 @@
 import { Disclosure } from '@headlessui/react';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
-import { Button, Tab, TabGroup, TabList, Flex, FiMsLogo } from '@tremor/react'; // Assuming FiMsLogo is imported from somewhere
+import { Button, Tab, TabGroup, TabList, Flex, BarkLogo } from '@tremor/react'; 
 import { useEffect, useState } from 'react';
 import { usePopup } from '../contexts/PopupProvider';
 import { Page, useNavigation } from '../hooks/useNavigation';
@@ -52,7 +52,7 @@ export default function Navbar() {
                     className={cls('flex flex-shrink-0 items-center', isConnected && currentPage !== Page.Dashboard ? 'cursor-pointer' : '')}
                     onClick={handleLogoClick}
                   >
-                    <FiMsLogo />
+                    <BarkLogo />
                   </a>
                   <div className={cls('contents', isConnected ? 'animate-display' : 'hidden')}>
                     <TabGroup
@@ -159,4 +159,5 @@ export default function Navbar() {
     </Disclosure>
   );
 }
+
 
