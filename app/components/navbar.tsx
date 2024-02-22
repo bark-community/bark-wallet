@@ -1,8 +1,10 @@
-// Navbar.jsx
+'use client';
+
 import { Disclosure } from '@headlessui/react';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import { Button, Tab, TabGroup, TabList } from '@tremor/react';
 import { useEffect, useState } from 'react';
+import { BarkLogo } from '../../public/bark-logo';
 import { usePopup } from '../contexts/PopupProvider';
 import { Page, useNavigation } from '../hooks/useNavigation';
 import { useUser } from '../hooks/useUser';
@@ -10,6 +12,7 @@ import { cls } from '../utils/constants';
 import { Dataset } from '../utils/types';
 import Connect from './connect';
 import Disconnect from './disconnect';
+
 
 const t: Dataset = {
   connect: 'Connect',
@@ -60,10 +63,10 @@ export default function Navbar() {
                       style={{ marginTop: '15px' }}
                       defaultIndex={pages.indexOf(currentPage ?? Page.Dashboard)}
                       index={pages.indexOf(currentPage ?? Page.Dashboard)}
-                      onIndexChange={(i) => setPage(pages[i])}
+                      onIndexChange={i => setPage(pages[i])}
                     >
                       <TabList>
-                        {pages.map((page) => (
+                        {pages.map(page => (
                           <Tab
                             className={cls(
                               'text-[20px] hover:text-gray-700 hover:font-bold',
@@ -126,7 +129,7 @@ export default function Navbar() {
                 )}
                 onClick={() => (window.location.href = window.location.origin)}
               >
-                <FiMsLogo />
+                <BarkLogo />
               </a>
             </div>
           )}
@@ -134,7 +137,7 @@ export default function Navbar() {
           {isConnected && !isAdmin && (
             <Disclosure.Panel className="sm:hidden animate-display">
               <div className="space-y-1 pt-2 pb-3">
-                {pages.map((page) => (
+                {pages.map(page => (
                   <Disclosure.Button
                     key={page}
                     className={cls(
@@ -160,57 +163,5 @@ export default function Navbar() {
         </>
       )}
     </Disclosure>
-  );
-}
-
-// GainsBar.jsx
-import { Flex, MarkerBar, Subtitle } from '@tremor/react';
-import { cls } from '../utils/constants';
-import { Dataset } from '../utils/types';
-
-const t: Dataset = {
-  invested: 'Invested',
-  gains: 'Gains',
-};
-
-interface GainsBarProps {
-  invested: number;
-  profitValue: number;
-  profitRatio: number;
-}
-
-export default function GainsBar({ values, loaded }: { values: GainsBarProps | undefined; loaded: boolean }) {
-  const { invested, profitValue, profitRatio } = values || {
-    invested: 0,
-    profitValue: 0,
-    profitRatio: 0,
-  };
-  const isPositive = profitRatio >= 0;
-  const isOverKill = profitRatio * 100 > 100;
-  const overKillValue = 10000 / (profitRatio * 100 + 100);
-
-  return (
-    <Flex className="mt-4 mb-1">
-      {invested || !loaded && (
-        <Subtitle className={cls('truncate w-0 text-left sm:w-1/2', !loaded && 'blur-sm')}>
-          {`${t.invested} : ${invested.toLocaleCurrency()}`}
-        </Subtitle>
-      )}
-      {invested || !loaded && (
-        <Subtitle className={!loaded ? 'blur-sm' : 'animate-unblur'}>
-          {`${t.gains} : ${profitValue.toLocaleCurrency()}${profitRatio ? ' (' + profitRatio.toRatio() + ')' : ''}`}
-        </Subtitle>
-      )}
-
-      {profitRatio || !loaded && (
-        <MarkerBar
-          title="Gains"
-          color={isPositive ? 'green' : 'red'}
-          value={isOverKill ? overKillValue : isPositive ? 0 : 100}
-          minValue={isOverKill ? overKillValue : isPositive ? 0 : 100 - Math.abs(profitRatio) * 100}
-          maxValue={isOverKill ? 100 : isPositive ? profitRatio * 100 : 100}
-        />
-      )}
-    </Flex>
   );
 }
