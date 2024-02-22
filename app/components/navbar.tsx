@@ -13,7 +13,6 @@ import { Dataset } from '../utils/types';
 import Connect from './connect';
 import Disconnect from './disconnect';
 
-
 const t: Dataset = {
   connect: 'Connect',
   disconnect: 'Disconnect',
