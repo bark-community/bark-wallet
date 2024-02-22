@@ -14,7 +14,7 @@ const config = {
   // The directory where Jest should store its cached dependency information
   // cacheDirectory: "/tmp/jest_rs",
 
-  // Automatically clear mock calls, instances, contexts and results before every test
+  // Automatically clear mock calls, instances, contexts, and results before every test
   // clearMocks: false,
 
   // Indicates whether the coverage information should be collected while executing the test
@@ -57,10 +57,10 @@ const config = {
   // Force coverage collection from ignored files using an array of glob patterns
   // forceCoverageMatch: [],
 
-  // A path to a module which exports an async function that is triggered once before all test suites
+  // A path to a module that exports an async function that is triggered once before all test suites
   // globalSetup: undefined,
 
-  // A path to a module which exports an async function that is triggered once after all test suites
+  // A path to a module that exports an async function that is triggered once after all test suites
   // globalTeardown: undefined,
 
   // A set of global variables that need to be available in all test environments
@@ -163,8 +163,8 @@ const config = {
   // This option allows the use of a custom results processor
   // testResultsProcessor: undefined,
 
-  // This option allows use of a custom test runner
-  // testRunner: "jest-circus/runner",
+  // This option allows the use of a custom test runner
+  // test-runner: "jest-circus/runner",
 
   // A map from regular expressions to paths to transformers
   // transform: undefined,
@@ -175,7 +175,7 @@ const config = {
   // An array of regexp pattern strings that are matched against all modules before the module loader will automatically return a mock for them
   // unmockedModulePathPatterns: undefined,
 
-  // Indicates whether each individual test should be reported during the run
+  // Indicates whether each test should be reported during the run
   // verbose: undefined,
 
   // An array of regexp patterns that are matched against all source file paths before re-running tests in watch mode
