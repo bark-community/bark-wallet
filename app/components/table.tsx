@@ -1,7 +1,9 @@
 import { sql } from '@vercel/postgres';
-import Image from 'next/image';
+import dynamic from 'next/dynamic';
 // import RefreshButton from './refresh-button';
 // import { seed } from '@/lib/seed';
+
+const Image = dynamic(() => import('next/image'));
 
 export default async function Table() {
   let data;
@@ -10,7 +12,8 @@ export default async function Table() {
   try {
     data = await sql`SELECT * FROM users`;
   } catch (e: any) {
-    if (e.message.includes('relation "users" does not exist')) {
+    const tableDoesNotExist = e.message.includes('relation "users" does not exist');
+    if (tableDoesNotExist) {
       console.log('Table does not exist, creating and seeding it with dummy data now...');
       // Table is not created yet
       //   await seed();
