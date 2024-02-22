@@ -4,5 +4,5 @@ export function getBarData(name: string, amount: number) {
     amount,
     value: Math.abs(amount),
     color: amount < 0 ? 'red' : 'green'
-  };
+  } as const;
 }
