@@ -1,9 +1,6 @@
 import { sql } from '@vercel/postgres';
 import dynamic from 'next/dynamic';
-// import RefreshButton from './refresh-button';
-// import { seed } from '@/lib/seed';
-
-const Image = dynamic(() => import('next/image'));
+import Image from 'next/image';
 
 export default async function Table() {
   let data;
@@ -11,7 +8,7 @@ export default async function Table() {
 
   try {
     data = await sql`SELECT * FROM users`;
-  } catch (e: any) {
+  } catch (e) {
     const tableDoesNotExist = e.message.includes('relation "users" does not exist');
     if (tableDoesNotExist) {
       console.log('Table does not exist, creating and seeding it with dummy data now...');
@@ -36,6 +33,7 @@ export default async function Table() {
             Fetched {users.length} users in {duration}ms
           </p>
         </div>
+        {/* Consider adding a refresh button */}
         {/* <RefreshButton /> */}
       </div>
       <div className="divide-y divide-gray-900/5">
@@ -54,6 +52,7 @@ export default async function Table() {
                 <p className="text-sm text-gray-500">{user.email}</p>
               </div>
             </div>
+            {/* Uncomment the following line when 'timeAgo' function is available */}
             {/* <p className="text-sm text-gray-500">{timeAgo(user.createdAt)}</p> */}
           </div>
         ))}
