@@ -1,21 +1,23 @@
+// Navbar.jsx
 import { Disclosure } from '@headlessui/react';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
-import { Button, Tab, TabGroup, TabList, Flex } from '@tremor/react';
+import { Button, Tab, TabGroup, TabList } from '@tremor/react';
 import { useEffect, useState } from 'react';
 import { usePopup } from '../contexts/PopupProvider';
 import { Page, useNavigation } from '../hooks/useNavigation';
 import { useUser } from '../hooks/useUser';
 import { cls } from '../utils/constants';
+import { Dataset } from '../utils/types';
 import Connect from './connect';
 import Disconnect from './disconnect';
 
-const t = {
+const t: Dataset = {
   connect: 'Connect',
   disconnect: 'Disconnect',
   dashboard: 'Dashboard',
   portfolio: 'Portfolio',
   transactions: 'Transactions',
-  users: 'Users',
+  users: 'User',
 };
 
 export default function Navbar() {
@@ -23,7 +25,11 @@ export default function Navbar() {
   const { page: currentPage, setPage, pages } = useNavigation();
   const { user, isConnected } = useUser();
 
-  const isAdmin = window.location.pathname === '/admin' && window.location.hostname === 'localhost';
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    setIsAdmin(window.location.pathname === '/admin' && window.location.hostname === 'localhost');
+  }, []);
 
   return (
     <Disclosure
@@ -38,10 +44,10 @@ export default function Navbar() {
           {!isAdmin ? (
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
               <div className="flex h-16 justify-between">
-                <div className="flex items-center">
+                <div className="flex">
                   <a
                     className={cls(
-                      'flex-shrink-0 items-center',
+                      'flex flex-shrink-0 items-center',
                       isConnected && currentPage !== Page.Dashboard ? 'cursor-pointer' : '',
                     )}
                     onClick={isConnected && currentPage !== Page.Dashboard ? () => setPage(Page.Dashboard) : undefined}
@@ -157,3 +163,54 @@ export default function Navbar() {
   );
 }
 
+// GainsBar.jsx
+import { Flex, MarkerBar, Subtitle } from '@tremor/react';
+import { cls } from '../utils/constants';
+import { Dataset } from '../utils/types';
+
+const t: Dataset = {
+  invested: 'Invested',
+  gains: 'Gains',
+};
+
+interface GainsBarProps {
+  invested: number;
+  profitValue: number;
+  profitRatio: number;
+}
+
+export default function GainsBar({ values, loaded }: { values: GainsBarProps | undefined; loaded: boolean }) {
+  const { invested, profitValue, profitRatio } = values || {
+    invested: 0,
+    profitValue: 0,
+    profitRatio: 0,
+  };
+  const isPositive = profitRatio >= 0;
+  const isOverKill = profitRatio * 100 > 100;
+  const overKillValue = 10000 / (profitRatio * 100 + 100);
+
+  return (
+    <Flex className="mt-4 mb-1">
+      {invested || !loaded && (
+        <Subtitle className={cls('truncate w-0 text-left sm:w-1/2', !loaded && 'blur-sm')}>
+          {`${t.invested} : ${invested.toLocaleCurrency()}`}
+        </Subtitle>
+      )}
+      {invested || !loaded && (
+        <Subtitle className={!loaded ? 'blur-sm' : 'animate-unblur'}>
+          {`${t.gains} : ${profitValue.toLocaleCurrency()}${profitRatio ? ' (' + profitRatio.toRatio() + ')' : ''}`}
+        </Subtitle>
+      )}
+
+      {profitRatio || !loaded && (
+        <MarkerBar
+          title="Gains"
+          color={isPositive ? 'green' : 'red'}
+          value={isOverKill ? overKillValue : isPositive ? 0 : 100}
+          minValue={isOverKill ? overKillValue : isPositive ? 0 : 100 - Math.abs(profitRatio) * 100}
+          maxValue={isOverKill ? 100 : isPositive ? profitRatio * 100 : 100}
+        />
+      )}
+    </Flex>
+  );
+}
