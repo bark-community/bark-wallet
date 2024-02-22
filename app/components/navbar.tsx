@@ -1,10 +1,8 @@
-'use client';
-
 import { Disclosure } from '@headlessui/react';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import { Button, Tab, TabGroup, TabList } from '@tremor/react';
 import { useEffect, useState } from 'react';
-import { BARKLogo } from '../../public/BarkLogo';
+import { BarkLogo } from './bark-logo';
 import { usePopup } from '../contexts/PopupProvider';
 import { Page, useNavigation } from '../hooks/useNavigation';
 import { useUser } from '../hooks/useUser';
@@ -17,7 +15,7 @@ const t: Dataset = {
   connect: 'Connect',
   disconnect: 'Disconnect',
   dashboard: 'BARK',
-  portfolio: 'Portfolio',
+  portfolio: 'My Account',
   transactions: 'Transactions',
   users: 'Users',
 };
@@ -30,7 +28,7 @@ export default function Navbar() {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    setIsAdmin(window.location.pathname === '/admin');
+    setIsAdmin(window.location.pathname === '/admin' && window.location.hostname === 'localhost');
   }, []);
 
   return (
@@ -54,7 +52,7 @@ export default function Navbar() {
                     )}
                     onClick={isConnected && currentPage !== Page.Dashboard ? () => setPage(Page.Dashboard) : undefined}
                   >
-                    <BARKLogo />
+                    <BarkLogo />
                   </a>
                   <div className={cls('contents', isConnected ? 'animate-display' : 'hidden')}>
                     <TabGroup
@@ -111,7 +109,7 @@ export default function Navbar() {
                 <div className={cls('ml-6 flex items-center', currentPage ? 'animate-display' : 'hidden')}>
                   <Button
                     className="flex font-bold"
-                    style={{ borderRadius: 16 }}
+                    style={{ borderRadius: 24 }}
                     onClick={() => openPopup(!isConnected ? <Connect /> : <Disconnect />)}
                   >
                     {!isConnected ? t.connect : user?.name}
@@ -128,7 +126,7 @@ export default function Navbar() {
                 )}
                 onClick={() => (window.location.href = window.location.origin)}
               >
-                <BARKLogo />
+                <FiMsLogo />
               </a>
             </div>
           )}
