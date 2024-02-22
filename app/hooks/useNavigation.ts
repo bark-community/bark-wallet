@@ -1,20 +1,22 @@
 import { createContext, useContext } from 'react';
 
-export interface User {
-  id: number;
-  name: string;
-  address: string;
+export enum Page {
+  Portfolio = 'Portfolio',
+  Transactions = 'Transactions',
+  Users = 'Users',
+  Dashboard = 'Dashboard', // Should stay at the end
 }
 
-export interface UserContextState {
-  user: User | undefined;
-  connect: (userName: string) => Promise<User | undefined>;
-  disconnect: () => void;
-  isConnected: boolean;
+export interface NavigationContextState {
+  page: Page | undefined;
+  setPage: (page: Page) => void;
+  pages: Page[];
+  needRefresh: boolean;
+  setNeedRefresh: (needRefresh: boolean) => void;
 }
 
-export const UserContext = createContext<UserContextState>({} as UserContextState);
+export const NavigationContext = createContext<NavigationContextState>({} as NavigationContextState);
 
-export function useUser(): UserContextState {
-  return useContext(UserContext);
+export function useNavigation(): NavigationContextState {
+  return useContext(NavigationContext);
 }
