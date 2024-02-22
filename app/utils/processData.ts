@@ -5,6 +5,7 @@ import { Transaction } from '../pages/transactions';
 import { DBUser } from '../pages/users';
 import { Data } from './types';
 
+// Define error classes
 class MissingDataError extends Error {
   name = 'MissingDataError';
   message = 'missing data';
@@ -35,23 +36,30 @@ export enum DataName {
 // Set a value that return all parameters needed to process data (convertFunction, hasFilter, minColInRow, minColInHeader)
 type Parameter = {
   convert: (item: string[]) => any;
-  hasHeader: boolean;
   range: string;
+  isHeaderLess?: boolean;
   minColInRow?: number;
 };
+
+// Define constants
+const MAX_ROW_VALUE = 100000;
+
+// Define parameters for each data name
 const dataNameParameters = new Map<DataName, Parameter>([
-  [DataName.dashboard, { convert: convertDashboardData, hasHeader: true, range: 'A:D' }],
-  [DataName.historic, { convert: convertHistoricData, hasHeader: false, range: 'A:L' }],
-  [DataName.token, { convert: convertTokenData, hasHeader: true, range: 'A:I', minColInRow: 4 }],
-  [DataName.portfolio, { convert: convertPortfolioData, hasHeader: true, range: 'A:M' }],
-  [DataName.userHistoric, { convert: convertUserHistoricData, hasHeader: true, range: 'A:I' }],
-  [DataName.transactions, { convert: convertTransactionsData, hasHeader: true, range: 'A:H' }],
+  [DataName.dashboard, { convert: convertDashboardData, range: 'A:D' }],
+  [DataName.historic, { convert: convertHistoricData, range: 'A:L' }],
+  [DataName.token, { convert: convertTokenData, range: 'A:I', minColInRow: 4 }],
+  [DataName.portfolio, { convert: convertPortfolioData, range: 'A:M' }],
+  [DataName.userHistoric, { convert: convertUserHistoricData, range: 'A:I' }],
+  [DataName.transactions, { convert: convertTransactionsData, range: 'A:H' }],
 ]);
 
+// Cache for data
 const dataCache = new Map<DataName, { data: any[]; expire: number }>();
 
+// Function to get public key
 export function getPublicKey() {
-  let publicKey = localStorage.getItem('PublicKey');
+  let publicKey = localStorage.getItem('PublicKey') || '';
   if (!publicKey) {
     publicKey = Keypair.generate().publicKey.toString();
     localStorage.setItem('PublicKey', publicKey);
@@ -59,33 +67,20 @@ export function getPublicKey() {
   return publicKey;
 }
 
-function getNumberOfColumns(range: string): number {
-  const [start, end] = range.split(':').map(columnNameToNumber);
-  return end - start + 1;
-}
-
-function columnNameToNumber(columnName: string): number {
-  let number = 0;
-  for (let i = 0; i < columnName.length; i++) {
-    number = number * 26 + (columnName.charCodeAt(i) - 64);
-  }
-  return number;
-}
-
+// Function to load data
 export async function loadData(name: DataName | string) {
   if (!navigator.onLine) throw new Error('The web app is offline');
 
-  const dataName = Object.values(DataName).includes(name as DataName) ? (name as DataName) : DataName.userHistoric;
-
+  const dataName = Object.values(DataName).find((value) => value === name) || DataName.userHistoric;
   const parameter = dataNameParameters.get(dataName);
+
   if (!parameter) throw new Error('data name not found');
 
   const cache = dataCache.get(dataName);
-  let data = cache?.data;
-  if (!cache?.data.length) {
-    data = await cacheData(name, dataName, parameter); // If the data is not in the cache, fetch it synchronously and wait for the cache to be updated
-  } else if (cache.expire < Date.now()) {
-    cacheData(name, dataName, parameter); // If the data is expired, fetch it again asynchronously and update the cache
+  let data = cache?.data || [];
+
+  if (!cache?.data.length || (cache.expire < Date.now())) {
+    data = await cacheData(name, dataName, parameter);
   }
 
   if (!data) throw new Error('data not loaded');
@@ -93,6 +88,7 @@ export async function loadData(name: DataName | string) {
   return data;
 }
 
+// Function to force data loading
 export async function forceData(name: DataName | string) {
   let data: any[] = [];
   while (!data.length) {
@@ -102,41 +98,51 @@ export async function forceData(name: DataName | string) {
   return data;
 }
 
+// Function to clear data cache
 export function clearData() {
   [DataName.userHistoric].forEach(name => {
     dataCache.set(name, { data: [], expire: 0 });
   });
 }
 
+// Function to cache data
 async function cacheData(sheetName: string, dataName: DataName, parameter: Parameter) {
   const numberOfColumns = getNumberOfColumns(parameter.range);
 
-  const data =
-    (await fetch(`./api/spreadsheet?sheetName=${sheetName}&range=${parameter.range}&isRaw=true`)
-      .then(result => (result.ok ? result.json() : undefined))
-      .then((data: { values: string[][]; error: string }) => {
-        checkData(data, numberOfColumns);
+  const data = (await fetchData(sheetName, parameter.range, parameter.isRaw))
+    ?.filter((_, i) => (parameter.isHeaderLess ? true : i !== 0))
+    .map(item => {
+      checkColumn(item, parameter.minColInRow ?? numberOfColumns);
+      return parameter.convert(item);
+    }) || [];
 
-        return data.values
-          .filter((_, i) => (parameter.hasHeader ? i !== 0 : true))
-          .map(item => {
-            checkColumn(item, parameter.minColInRow ?? numberOfColumns);
-            return parameter.convert(item);
-          });
-      })
-      .catch(error => {
-        console.error(error);
-        if (error instanceof WrongDataPatternError) {
-          return;
-        }
-      })) ?? [];
-
-  dataCache.set(dataName, { data: data, expire: Date.now() + 1000 * 60 });
+  dataCache.set(dataName, { data, expire: Date.now() + 1000 * 60 });
 
   return data;
 }
 
-function checkData(data: any, minCol: number, maxCol = minCol, minRow = 1, maxRow = 100000) {
+// Function to fetch data from API
+async function fetchData(sheetName: string, range: string, isRaw?: boolean) {
+  try {
+    const result = await fetch(`./api/spreadsheet?sheetName=${sheetName}&range=${range}&isRaw=${isRaw ?? false}`);
+    if (result.ok) {
+      const data = await result.json();
+      checkData(data, getNumberOfColumns(range));
+      return data.values;
+    } else {
+      return undefined;
+    }
+  } catch (error) {
+    console.error(error);
+    if (error instanceof WrongDataPatternError) {
+      return;
+    }
+    return undefined;
+  }
+}
+
+// Function to check data integrity
+function checkData(data: any, minCol: number, maxCol = minCol, minRow = 1, maxRow = MAX_ROW_VALUE) {
   if (!data) throw new Error('data not fetched');
   if (data.error) throw new Error(data.error);
   if (!data.values?.length) throw new MissingDataError();
@@ -150,51 +156,43 @@ function checkData(data: any, minCol: number, maxCol = minCol, minRow = 1, maxRo
     throw new WrongDataPatternError();
 }
 
+// Function to check minimum column in a row
 function checkColumn(item: any[], minCol: number) {
   if (item.length < minCol) throw new WrongDataPatternError();
 }
 
+// Function to convert dashboard data
 function convertDashboardData(item: string[]): Data {
   return {
     label: String(item.at(0)).trim(),
-    // sol: Number(item.at(1)), //not used
     value: Number(item.at(2)),
     ratio: Number(item.at(3)),
   };
 }
 
+// Function to convert token data
 function convertTokenData(item: string[]): DashboardToken & PortfolioToken {
   return {
-    symbol: String(item.at(0)).trim(), // token symbol
-    label: String(item.at(1)).trim(), // token name
-    // mintAddress: String(item.at(2)).trim(), //not used
+    symbol: String(item.at(0)).trim(),
+    label: String(item.at(1)).trim(),
     value: Number(item.at(3)),
-    available: Number(item.at(4)), //not used
-    // yearlyYield: Number(item.at(5)),  //not used
-    ratio: Number(item.at(6)), // inception yield
-    // inceptionPrice: Number(item.at(7)), //not used
+    available: Number(item.at(4)),
+    ratio: Number(item.at(6)),
     duration: Number(item.at(8)),
   };
 }
 
+// Function to convert historic data
 function convertHistoricData(item: string[]): Historic {
   return {
     date: Number(item.at(0)),
-    stringDate: Number(item.at(0)).toLocaleDate(),
-    Investment: Number(item.at(1)),
-    // transferCost: Number(item.at(2)), //not used
-    // strategyCost: Number(item.at(3)), //not used
-    // priceChange: Number(item.at(4)), //not used
-    Treasury: Number(item.at(5)),
-    // boughtPrice: Number(item.at(6)), //not used
-    // price: Number(item.at(7)), //not used
-    // profit: Number(item.at(8)), //not used
-    // profitRate: Number(item.at(9)), //not used
-    // progress: Number(item.at(10)), //not used
-    // ratio: Number(item.at(11)), //not used
+    stringDate: Number(item.at(0)).toLocaleDateString(),
+    Investi: Number(item.at(1)),
+    Trésorerie: Number(item.at(5)),
   };
 }
 
+// Function to convert portfolio data
 function convertPortfolioData(item: string[]): Portfolio & DBUser {
   return {
     id: Number(item.at(0)),
@@ -211,25 +209,21 @@ function convertPortfolioData(item: string[]): Portfolio & DBUser {
   };
 }
 
+// Function to convert user historic data
 function convertUserHistoricData(item: string[]): UserHistoric {
   return {
     date: Number(item.at(0)),
-    stringDate: Number(item.at(0)).toLocaleDate(),
-    // movement: Number(item.at(1)), // not used
+    stringDate: Number(item.at(0)).toLocaleDateString(),
     Investi: Number(item.at(2)),
-    // monthlyRate: Number(item.at(3)), //not used
-    // averageRate: Number(item.at(4)), //not used
-    // yearlyRate: Number(item.at(5)), //not used
-    // monthlyGain: Number(item.at(6)), //not used
-    // totalGain: Number(item.at(7)), //not used
     Total: Number(item.at(8)),
   };
 }
 
+// Function to convert transactions data
 function convertTransactionsData(item: string[]): Transaction {
   return {
     id: Number(item.at(0)),
-    date: String(item.at(1)).trim(),
+    date: new Date(String(item.at(1)).trim()),
     userid: Number(item.at(2)),
     address: String(item.at(3)).trim(),
     movement: Number(item.at(4)),
@@ -237,4 +231,15 @@ function convertTransactionsData(item: string[]): Transaction {
     token: String(item.at(6)).trim(),
     amount: Number(item.at(7)),
   };
+}
+
+// Function to get the number of columns from a range
+function getNumberOfColumns(range: string): number {
+  const [start, end] = range.split(':').map(columnNameToNumber);
+  return end - start + 1;
+}
+
+// Function to convert a column name to a number
+function columnNameToNumber(columnName: string): number {
+  return columnName.split('').reduce((acc, char) => acc * 26 + (char.charCodeAt(0) - 64), 0);
 }
