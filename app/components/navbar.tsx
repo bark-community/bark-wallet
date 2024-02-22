@@ -1,6 +1,6 @@
 import { Disclosure } from '@headlessui/react';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
-import { Button, Tab, TabGroup, TabList } from '@tremor/react';
+import { Button, Tab, TabGroup, TabList, Flex, FiMsLogo } from '@tremor/react'; // Assuming FiMsLogo is imported from somewhere
 import { useEffect, useState } from 'react';
 import { usePopup } from '../contexts/PopupProvider';
 import { Page, useNavigation } from '../hooks/useNavigation';
@@ -10,13 +10,13 @@ import { Dataset } from '../utils/types';
 import Connect from './connect';
 import Disconnect from './disconnect';
 
-const t: Dataset = {
+const translations: Dataset = {
   connect: 'Connect',
   disconnect: 'Disconnect',
   dashboard: 'Dashboard',
   portfolio: 'Portfolio',
   transactions: 'Transactions',
-  users: 'User',
+  users: 'Users',
 };
 
 export default function Navbar() {
@@ -24,17 +24,23 @@ export default function Navbar() {
   const { page: currentPage, setPage, pages } = useNavigation();
   const { user, isConnected } = useUser();
 
-  const isAdmin = window.location.pathname === '/admin' && window.location.hostname === 'localhost';
+  const [isAdmin, setIsAdmin] = useState(false);
 
-  const canClick = (condition, callback) => (condition ? callback : undefined);
+  useEffect(() => {
+    setIsAdmin(window.location.pathname === '/admin' && window.location.hostname === 'localhost');
+  }, []);
+
+  const handleLogoClick = () => {
+    if (isConnected && currentPage !== Page.Dashboard) {
+      setPage(Page.Dashboard);
+    }
+    // Additional logic if needed
+  };
 
   return (
     <Disclosure
       as="nav"
-      className={cls(
-        'bg-tremor-background dark:bg-dark-tremor-background shadow-sm flex-shrink-0 z-10',
-        isPopupOpen ? 'blur-sm' : '',
-      )}
+      className={cls('bg-tremor-background dark:bg-dark-tremor-background shadow-sm flex-shrink-0 z-10', isPopupOpen ? 'blur-sm' : '')}
     >
       {({ open }) => (
         <>
@@ -43,11 +49,8 @@ export default function Navbar() {
               <div className="flex h-16 justify-between">
                 <div className="flex">
                   <a
-                    className={cls(
-                      'flex flex-shrink-0 items-center',
-                      isConnected && currentPage !== Page.Dashboard ? 'cursor-pointer' : '',
-                    )}
-                    onClick={canClick(isConnected && currentPage !== Page.Dashboard, () => setPage(Page.Dashboard))}
+                    className={cls('flex flex-shrink-0 items-center', isConnected && currentPage !== Page.Dashboard ? 'cursor-pointer' : '')}
+                    onClick={handleLogoClick}
                   >
                     <FiMsLogo />
                   </a>
@@ -71,7 +74,7 @@ export default function Navbar() {
                             key={page}
                             aria-current={page === currentPage ? 'page' : undefined}
                           >
-                            {t[page.toLowerCase()]}
+                            {translations[page.toLowerCase()]}
                           </Tab>
                         ))}
                       </TabList>
@@ -109,7 +112,7 @@ export default function Navbar() {
                     style={{ borderRadius: 24 }}
                     onClick={() => openPopup(!isConnected ? <Connect /> : <Disconnect />)}
                   >
-                    {!isConnected ? t.connect : user?.name}
+                    {!isConnected ? translations.connect : user?.name}
                   </Button>
                 </div>
               </div>
@@ -117,10 +120,7 @@ export default function Navbar() {
           ) : (
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex h-16 justify-between">
               <a
-                className={cls(
-                  'flex flex-shrink-0 items-center',
-                  isConnected && currentPage !== Page.Dashboard ? 'cursor-pointer' : '',
-                )}
+                className={cls('flex flex-shrink-0 items-center', isConnected && currentPage !== Page.Dashboard ? 'cursor-pointer' : '')}
                 onClick={() => (window.location.href = window.location.origin)}
               >
                 <FiMsLogo />
@@ -148,7 +148,7 @@ export default function Navbar() {
                     onClick={() => setPage(page)}
                     aria-current={page === currentPage ? 'page' : undefined}
                   >
-                    {t[page.toLowerCase()]}
+                    {translations[page.toLowerCase()]}
                   </Disclosure.Button>
                 ))}
               </div>
@@ -159,3 +159,4 @@ export default function Navbar() {
     </Disclosure>
   );
 }
+
