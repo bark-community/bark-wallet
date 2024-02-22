@@ -4,8 +4,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Dataset } from '../utils/types';
 
-const t: Dataset = {
-  searchByName: 'Search by Name',
+const translations: Dataset = {
+  searchByName: 'Search by name...',
 };
 
 export default function Search({ disabled, defaultValue }: { disabled?: boolean; defaultValue: string }) {
@@ -19,12 +19,7 @@ export default function Search({ disabled, defaultValue }: { disabled?: boolean;
       setValue(term);
 
       const params = new URLSearchParams(window.location.search);
-      if (term) {
-        params.set('q', term);
-      } else {
-        params.delete('q');
-      }
-
+      term ? params.set('q', term) : params.delete('q');
       replace(`${pathname}?${params.toString()}`);
     },
     [pathname, replace]
@@ -32,15 +27,13 @@ export default function Search({ disabled, defaultValue }: { disabled?: boolean;
 
   const inputRef = useRef<HTMLInputElement | null>(null);
   useEffect(() => {
-    if (inputRef.current) {
-      setTimeout(() => inputRef.current?.focus(), 100);
-    }
+    inputRef.current?.focus();
   }, []);
 
   return (
     <div className="relative mt-5 max-w-md">
       <label htmlFor="search" className="sr-only">
-        {t.searchByName}
+        {translations.searchByName}
       </label>
       <TextInput
         autoFocus
@@ -50,7 +43,7 @@ export default function Search({ disabled, defaultValue }: { disabled?: boolean;
         name="search"
         id="search"
         disabled={disabled}
-        placeholder={t.searchByName}
+        placeholder={translations.searchByName}
         spellCheck={false}
         autoComplete="off"
         value={value}
