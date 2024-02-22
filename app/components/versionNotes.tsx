@@ -17,8 +17,8 @@ export type VersionNote = {
 };
 
 export default function VersionNotes({ versionNotes, onClose }: { versionNotes: VersionNote[]; onClose: () => void }) {
-  const isMobile = useIsMobile(450); // sm for tailwindcss breakpoints
-  const isTablet = useIsMobile(640); // md for tailwindcss breakpoints
+  const isMobile = useIsMobile(450); // 'sm' for tailwindcss breakpoints
+  const isTablet = useIsMobile(640); // 'md' for tailwindcss breakpoints
 
   const [showMore, setShowMore] = useState(false);
 
@@ -30,10 +30,7 @@ export default function VersionNotes({ versionNotes, onClose }: { versionNotes: 
           <Divider>
             <Title>{versionNote.version}</Title>
           </Divider>
-          <ul
-            className="w-64 sm:w-96 md:w-[450px]"
-            style={{ listStyleType: 'disc', width: isMobile ? '250px' : isTablet ? '350px' : '450px' }}
-          >
+          <ul className={`w-full md:w-[650px] list-disc ${isMobile ? 'w-300px' : isTablet ? 'w-400px' : 'w-450px'}`}>
             {versionNote.notes.map((note, noteIndex) => (
               <li className="text-left" key={noteIndex}>
                 {note}
