@@ -1,16 +1,15 @@
 import { Disclosure } from '@headlessui/react';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
-import { Button, Tab, TabGroup, TabList, Flex, BarkLogo } from '@tremor/react'; 
+import { Button, Tab, TabGroup, TabList, Flex } from '@tremor/react';
 import { useEffect, useState } from 'react';
 import { usePopup } from '../contexts/PopupProvider';
 import { Page, useNavigation } from '../hooks/useNavigation';
 import { useUser } from '../hooks/useUser';
 import { cls } from '../utils/constants';
-import { Dataset } from '../utils/types';
 import Connect from './connect';
 import Disconnect from './disconnect';
 
-const translations: Dataset = {
+const t = {
   connect: 'Connect',
   disconnect: 'Disconnect',
   dashboard: 'Dashboard',
@@ -24,35 +23,30 @@ export default function Navbar() {
   const { page: currentPage, setPage, pages } = useNavigation();
   const { user, isConnected } = useUser();
 
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  useEffect(() => {
-    setIsAdmin(window.location.pathname === '/admin' && window.location.hostname === 'localhost');
-  }, []);
-
-  const handleLogoClick = () => {
-    if (isConnected && currentPage !== Page.Dashboard) {
-      setPage(Page.Dashboard);
-    }
-    // Additional logic if needed
-  };
+  const isAdmin = window.location.pathname === '/admin' && window.location.hostname === 'localhost';
 
   return (
     <Disclosure
       as="nav"
-      className={cls('bg-tremor-background dark:bg-dark-tremor-background shadow-sm flex-shrink-0 z-10', isPopupOpen ? 'blur-sm' : '')}
+      className={cls(
+        'bg-tremor-background dark:bg-dark-tremor-background shadow-sm flex-shrink-0 z-10',
+        isPopupOpen ? 'blur-sm' : '',
+      )}
     >
       {({ open }) => (
         <>
           {!isAdmin ? (
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
               <div className="flex h-16 justify-between">
-                <div className="flex">
+                <div className="flex items-center">
                   <a
-                    className={cls('flex flex-shrink-0 items-center', isConnected && currentPage !== Page.Dashboard ? 'cursor-pointer' : '')}
-                    onClick={handleLogoClick}
+                    className={cls(
+                      'flex-shrink-0 items-center',
+                      isConnected && currentPage !== Page.Dashboard ? 'cursor-pointer' : '',
+                    )}
+                    onClick={isConnected && currentPage !== Page.Dashboard ? () => setPage(Page.Dashboard) : undefined}
                   >
-                    <BarkLogo />
+                    <FiMsLogo />
                   </a>
                   <div className={cls('contents', isConnected ? 'animate-display' : 'hidden')}>
                     <TabGroup
@@ -74,7 +68,7 @@ export default function Navbar() {
                             key={page}
                             aria-current={page === currentPage ? 'page' : undefined}
                           >
-                            {translations[page.toLowerCase()]}
+                            {t[page.toLowerCase()]}
                           </Tab>
                         ))}
                       </TabList>
@@ -112,7 +106,7 @@ export default function Navbar() {
                     style={{ borderRadius: 24 }}
                     onClick={() => openPopup(!isConnected ? <Connect /> : <Disconnect />)}
                   >
-                    {!isConnected ? translations.connect : user?.name}
+                    {!isConnected ? t.connect : user?.name}
                   </Button>
                 </div>
               </div>
@@ -120,7 +114,10 @@ export default function Navbar() {
           ) : (
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex h-16 justify-between">
               <a
-                className={cls('flex flex-shrink-0 items-center', isConnected && currentPage !== Page.Dashboard ? 'cursor-pointer' : '')}
+                className={cls(
+                  'flex flex-shrink-0 items-center',
+                  isConnected && currentPage !== Page.Dashboard ? 'cursor-pointer' : '',
+                )}
                 onClick={() => (window.location.href = window.location.origin)}
               >
                 <FiMsLogo />
@@ -148,7 +145,7 @@ export default function Navbar() {
                     onClick={() => setPage(page)}
                     aria-current={page === currentPage ? 'page' : undefined}
                   >
-                    {translations[page.toLowerCase()]}
+                    {t[page.toLowerCase()]}
                   </Disclosure.Button>
                 ))}
               </div>
@@ -159,5 +156,4 @@ export default function Navbar() {
     </Disclosure>
   );
 }
-
 
