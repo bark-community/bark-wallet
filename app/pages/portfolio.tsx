@@ -25,14 +25,14 @@ import { isMobileSize } from '../utils/mobile';
 import { DataName, forceData, loadData } from '../utils/processData';
 import { Data, Dataset } from '../utils/types';
 
-const t: Dataset = {
+const dataset: Dataset = {
   totalValue: 'Total Value',
   assets: 'Assets',
-  emptyPortfolio: 'Empty Portfolio',
-  dataLoading: 'Data Loading...',
-  tokenLogo: 'Token logo',
+  emptyPortfolio: 'No assets found',
+  dataLoading: 'Loading data...',
+  tokenLogo: 'Token Logo',
   total: 'Total',
-  transfered: 'Transfered',
+  transfered: 'Invested',
   loading: 'Loading...',
 };
 
@@ -76,94 +76,196 @@ export interface UserHistoric {
 
 const thisPage = Page.Portfolio;
 
-export default function Portfolio() {
+const Portfolio = () => {
   const { user } = useUser();
   const { page, needRefresh, setNeedRefresh } = useNavigation();
 
-  const [wallet, setWallet] = useState<Wallet[]>();
-  const [portfolio, setPortfolio] = useState<Portfolio>();
+  const [wallet, setWallet] = useState<Wallet[] | null>(null);
+  const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
   const [historic, setHistoric] = useState<UserHistoric[]>([]);
 
-  const loadAssets = async (address: string, hasBARKToken: boolean) => {
-    return await fetch(
-      `/api/solana/getAssets?address=${address}${hasBARKToken ? '&creator=CCLcWAJX6fubUqGyZWz8dyUGEddRj8h4XZZCNSDzMVx4' : ''}`,
-    )
-      .then(async result => await (result.ok ? result.json() : undefined))
-      .then((tokens: Asset[]) => tokens)
-      .catch(console.error);
+  const loadAssets = async (address: string, hasFiMsToken: boolean) => {
+    try {
+      const result = await fetch(`/api/solana/getAssets?address=${address}${hasFiMsToken ? '&creator=BARKPp4yRWtcLhwMryz889TK2kV2aWP4jqCaRKnHLaLj' : ''}`);
+      if (!result.ok) throw new Error('Failed to fetch assets');
+      return await result.json();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const fetchData = async () => {
+    if (!user || !needRefresh || page !== thisPage) return;
+
+    setNeedRefresh(false);
+
+    try {
+      const tokens: PortfolioToken[] = await loadData(DataName.token);
+      let data: Portfolio[] = await loadData(DataName.portfolio);
+
+      if (!data.length) {
+        data = await forceData(DataName.portfolio);
+      }
+
+      if (!tokens.length) {
+        tokens = await forceData(DataName.token);
+      }
+
+      const p = data.find(d => d.id === user.id) ?? {
+        id: user.id,
+        address: user.address,
+        token: [],
+        total: 0,
+        invested: 0,
+        profitValue: 0,
+        profitRatio: 0,
+        yearlyYield: 0,
+        solProfitPrice: 0,
+      };
+
+      const assets = await loadAssets(user.address, !!p.total);
+
+      if (assets?.length) {
+        p.total = assets.reduce(
+          (a, b) => a + (b.balance ?? 0) * (tokens.find(t => t.label === b.name)?.value ?? 0),
+          0,
+        );
+        p.profitValue = p.total - p.invested;
+        p.profitRatio = p.invested ? p.profitValue / p.invested : 0;
+        p.token = tokens.map(t => assets.find(a => a.name === t.label)?.balance ?? 0);
+      }
+
+      setPortfolio(p);
+
+      setWallet(
+        tokens
+          .map((t, i) => ({
+            image: TOKEN_PATH + t.label.replaceAll(' ', '') + '.png',
+            name: t.label,
+            symbol: t.symbol,
+            balance: p.token[i],
+            value: t.value,
+            total: p.token[i] * t.value,
+          }))
+          .filter(t => t.balance)
+          .sort((a, b) => b.total - a.total),
+      );
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const isLoading = useRef(false);
+
   useEffect(() => {
-    if (!user || isLoading.current || !needRefresh || page !== thisPage) return;
+    if (isLoading.current) return;
 
     isLoading.current = true;
-    setNeedRefresh(false);
-
-    loadData(DataName.token)
-      .then((tokens: PortfolioToken[]) =>
-        loadData(DataName.portfolio)
-          .then(async (data: Portfolio[]) => {
-            if (!data.length) data = await forceData(DataName.portfolio);
-            if (!tokens.length) tokens = await forceData(DataName.token);
-
-            const p = data.find(d => d.id === user.id) ?? {
-              id: user.id,
-              address: user.address,
-              token: [],
-              total: 0,
-              invested: 0,
-              profitValue: 0,
-              profitRatio: 0,
-              yearlyYield: 0,
-              solProfitPrice: 0,
-            };
-            const assets = await loadAssets(user.address, !!p.total);
-            if (assets?.length) {
-              p.total = assets.reduce(
-                (a, b) => a + (b.balance ?? 0) * (tokens.find(t => t.label === b.name)?.value ?? 0),
-                0,
-              );
-              p.profitValue = p.total - p.invested;
-              p.profitRatio = p.invested ? p.profitValue / p.invested : 0;
-              p.token = tokens.map(t => assets.find(a => a.name === t.label)?.balance ?? 0);
-            }
-            setPortfolio(p);
-
-            setWallet(
-              tokens
-                .map((t, i) => ({
-                  image: TOKEN_PATH + t.label.replaceAll(' ', '') + '.png',
-                  name: t.label,
-                  symbol: t.symbol,
-                  balance: p.token[i],
-                  value: t.value,
-                  total: p.token[i] * t.value,
-                }))
-                .filter(t => t.balance)
-                .sort((a, b) => b.total - a.total),
-            );
-          })
-          .catch(console.error),
-      )
-      .then(() => loadData(user.name))
-      .then(setHistoric)
-      .catch(console.error)
-      .finally(() => (isLoading.current = false));
-  }, [needRefresh, setNeedRefresh, page, user]);
+    fetchData();
+    setNeedRefresh(true); // Trigger another fetch on the next render
+    isLoading.current = false;
+  }, [page, user]);
 
   const { minHisto, maxHisto } = useMemo(() => {
-    const minHisto = Math.min(...[...historic.map(d => d.Investi), ...historic.map(d => d.Total)]).toDecimalPlace(
-      3,
-      'down',
-    );
-    const maxHisto = Math.max(...[...historic.map(d => d.Investi), ...historic.map(d => d.Total)]).toDecimalPlace(
-      3,
-      'up',
-    );
-
+    const minHisto = Math.min(...[...historic.map(d => d.Investi), ...historic.map(d => d.Total)]).toDecimalPlace(3, 'down');
+    const maxHisto = Math.max(...[...historic.map(d => d.Investi), ...historic.map(d => d.Total)]).toDecimalPlace(3, 'up');
     return { minHisto, maxHisto };
   }, [historic]);
+
+  const renderGainsBar = () => (!portfolio || portfolio.invested ? <GainsBar values={portfolio} loaded={!!portfolio} /> : null);
+
+  const renderWalletTable = () => (
+    <Table>
+      <TableBody>
+        {wallet?.map(asset => (
+          <TableRow
+            key={asset.name}
+            className="hover:bg-tremor-background-subtle dark:hover:bg-dark-tremor-background-subtle"
+          >
+            <TableCell>
+              <Image
+                className="rounded-full"
+                src={asset.image}
+                alt={dataset.tokenLogo}
+                width={50}
+                height={50}
+              ></Image>
+            </TableCell>
+            <TableCell>
+              <Flex justifyContent="between">
+                <div className="text-xl truncate">{asset.name}</div>
+                <div>{`${asset.balance.toShortFixed()} ${asset.symbol}`}</div>
+              </Flex>
+              <Flex justifyContent="between">
+                <div>{asset.value ? asset.value.toLocaleCurrency() : ''}</div>
+                <div className="font-bold text-lg">{asset.total.toLocaleCurrency()}</div>
+              </Flex>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+
+  const renderLoadingSkeleton = () => (
+    <Table>
+      <TableBody>
+        <TableRow className="animate-pulse">
+          <TableCell>
+            <div className="rounded-full w-[50px] h-[50px] bg-tremor-border"></div>
+          </TableCell>
+          <TableCell>
+            <Flex justifyContent="between">
+              <div className="bg-tremor-border w-24 h-7 mb-1 rounded-md"></div>
+              <div className="bg-tremor-border w-10 h-5 mb-1 rounded-md"></div>
+            </Flex>
+            <Flex justifyContent="between">
+              <div className="bg-tremor-border w-16 h-5 mb-1 rounded-md"></div>
+              <div className="bg-tremor-border w-24 h-7 mb-1 rounded-md"></div>
+            </Flex>
+          </TableCell>
+        </TableRow>
+      </TableBody>
+    </Table>
+  );
+
+  const renderPerformanceAccordion = () => (
+    <Accordion className="group" defaultOpen={!isMobileSize()}>
+      <AccordionHeader>
+        <Title>Performance</Title>
+        {historic.length > 1 && (
+          <Flex className="w-full" justifyContent="center">
+            <SparkAreaChart
+              data={historic.sort((a, b) => a.date - b.date)}
+              categories={[dataset.total]}
+              index={'stringDate'}
+              colors={['emerald']}
+              className="ml-4 h-10 w-[80%] text-center animate-display group-data-[headlessui-state=open]:invisible"
+              curveType="monotone"
+              noDataText={dataset.loading}
+            />
+          </Flex>
+        )}
+      </AccordionHeader>
+      <AccordionBody>
+        <AreaChart
+          className="h-80"
+          data={historic.sort((a, b) => a.date - b.date)}
+          categories={[dataset.transfered, dataset.total]}
+          index="stringDate"
+          colors={['indigo', 'fuchsia']}
+          valueFormatter={number => number.toShortCurrency()}
+          yAxisWidth={50}
+          showAnimation={true}
+          animationDuration={2000}
+          curveType="monotone"
+          noDataText={dataset.loading}
+          minValue={minHisto}
+          maxValue={maxHisto}
+        />
+      </AccordionBody>
+    </Accordion>
+  );
 
   return (
     <>
@@ -171,7 +273,7 @@ export default function Portfolio() {
         <AccordionHeader>
           <Flex alignItems="start">
             <div>
-              <Title className="text-left">{t.totalValue}</Title>
+              <Title className="text-left">{dataset.totalValue}</Title>
               <Metric color="green" className={!portfolio ? 'blur-sm' : 'animate-unblur'}>
                 {(portfolio?.total ?? 0).toLocaleCurrency()}
               </Metric>
@@ -191,101 +293,14 @@ export default function Portfolio() {
           </Flex>
         </AccordionHeader>
         <AccordionBody>
-          {!portfolio || portfolio.invested ? <GainsBar values={portfolio} loaded={!!portfolio} /> : null}
-          {!wallet || wallet.length ? <Divider style={{ fontSize: 18 }}>{t.assets}</Divider> : null}
-
-          {wallet ? (
-            <Table>
-              <TableBody>
-                {wallet.map(asset => (
-                  <TableRow
-                    key={asset.name}
-                    className="hover:bg-tremor-background-subtle dark:hover:bg-dark-tremor-background-subtle"
-                  >
-                    <TableCell>
-                      <Image
-                        className="rounded-full"
-                        src={asset.image}
-                        alt={t.tokenLogo}
-                        width={50}
-                        height={50}
-                      ></Image>
-                    </TableCell>
-                    <TableCell>
-                      <Flex justifyContent="between">
-                        <div className="text-xl truncate">{asset.name}</div>
-                        <div>{`${asset.balance.toShortFixed()} ${asset.symbol}`}</div>
-                      </Flex>
-                      <Flex justifyContent="between">
-                        <div>{asset.value ? asset.value.toLocaleCurrency() : ''}</div>
-                        <div className="font-bold text-lg">{asset.total.toLocaleCurrency()}</div>
-                      </Flex>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (
-            <Table>
-              <TableBody>
-                <TableRow className="animate-pulse">
-                  <TableCell>
-                    <div className="rounded-full w-[50px] h-[50px] bg-tremor-border"></div>
-                  </TableCell>
-                  <TableCell>
-                    <Flex justifyContent="between">
-                      <div className="bg-tremor-border w-24 h-7 mb-1 rounded-md"></div>
-                      <div className="bg-tremor-border w-10 h-5 mb-1 rounded-md"></div>
-                    </Flex>
-                    <Flex justifyContent="between">
-                      <div className="bg-tremor-border w-16 h-5 mb-1 rounded-md"></div>
-                      <div className="bg-tremor-border w-24 h-7 mb-1 rounded-md"></div>
-                    </Flex>
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          )}
+          {renderGainsBar()}
+          {wallet? renderWalletTable() : renderLoadingSkeleton()}
         </AccordionBody>
       </Accordion>
 
-      {!portfolio || portfolio?.invested ? (
-        <Accordion className="group" defaultOpen={!isMobileSize()}>
-          <AccordionHeader>
-            <Title>Performance</Title>
-            {historic.length > 1 && (
-              <Flex className="w-full" justifyContent="center">
-                <SparkAreaChart
-                  data={historic.sort((a, b) => a.date - b.date)}
-                  categories={[t.total]}
-                  index={'stringDate'}
-                  colors={['emerald']}
-                  className="ml-4 h-10 w-[80%] text-center animate-display group-data-[headlessui-state=open]:invisible"
-                  curveType="monotone"
-                  noDataText={t.loading}
-                />
-              </Flex>
-            )}
-          </AccordionHeader>
-          <AccordionBody>
-            <AreaChart
-              className="h-80"
-              data={historic.sort((a, b) => a.date - b.date)}
-              categories={[t.transfered, t.total]}
-              index="stringDate"
-              colors={['indigo', 'fuchsia']}
-              valueFormatter={number => number.toShortCurrency()}
-              yAxisWidth={50}
-              showAnimation={true}
-              animationDuration={2000}
-              curveType="monotone"
-              noDataText={t.loading}
-              minValue={minHisto}
-              maxValue={maxHisto}
-            />
-          </AccordionBody>
-        </Accordion>
-      ) : null}
+      {(!portfolio || portfolio?.invested) && renderPerformanceAccordion()}
     </>
   );
-}
+};
+
+export default Portfolio;
