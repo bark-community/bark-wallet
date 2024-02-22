@@ -23,9 +23,10 @@ export const TransactionDetails = ({ transaction }: { transaction: Transaction }
   const { closePopup } = usePopup();
 
   const renderTransactionDetail = (item: string, index: number) => {
+    const isNumeric = !isNaN(Number(transaction[item]));
+    
+    // Only render the details if the condition is met
     if (transaction[item] !== undefined && (transaction.type !== TransactionType.donation || item !== 'cost')) {
-      const isNumeric = !isNaN(Number(transaction[item]));
-
       return (
         <ListItem key={index}>
           <span>{t[item]}</span>
@@ -53,6 +54,7 @@ export const TransactionDetails = ({ transaction }: { transaction: Transaction }
     </>
   );
 };
+
 
     </>
   );
