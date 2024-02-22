@@ -1,4 +1,4 @@
-// 'use client';
+'use client';
 
 import { CurrencyEuroIcon } from '@heroicons/react/24/solid';
 import { PublicKey } from '@solana/web3.js';
@@ -74,7 +74,7 @@ export default function AdminPage() {
     setName('');
     setAddress('');
     setIsPublic(false);
-    if (userTabIndex && users?.length) setUserIndex(users?.[0]?.id.toString() ?? '1'); // Init users on edit/delete only
+    if (userTabIndex && users?.length) setUserIndex(users?.at(0)?.id.toString() ?? '1'); // Init users on edit/delete only
   }, [userTabIndex, users]);
 
   const initTransaction = useCallback(() => {
@@ -87,24 +87,24 @@ export default function AdminPage() {
     setTokenPrice(0);
     setHasCost(false);
     if (transactionTabIndex && transactions?.length)
-      setTransactionIndex(transactions?.[transactions.length - 1]?.id?.toString() ?? '1');
+      setTransactionIndex(transactions?.at(transactions.length - 1)?.id?.toString() ?? '1');
   }, [transactionTabIndex, transactions]);
 
-  const loadUsers = useCallback(() => {
+  const loadUsers = () => {
     fetch('/api/database/getUsers')
       .then(result => (result.ok ? result.json() : undefined))
       .then(setUsers)
       .catch(console.error)
       .finally(initUser);
-  }, [initUser]);
+  };
 
-  const loadTransactions = useCallback(() => {
+  const loadTransactions = () => {
     fetch('/api/database/getTransactions')
       .then(result => (result.ok ? result.json() : undefined))
       .then(setTransactions)
       .catch(console.error)
       .finally(initTransaction);
-  }, [initTransaction]);
+  };
 
   useEffect(() => {
     if (location.hostname !== 'localhost') {
@@ -116,7 +116,7 @@ export default function AdminPage() {
     loadTransactions();
     loadData(DataName.token).then(setTokens);
     setIsAuthorized(true);
-  }, [loadUsers, loadTransactions]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (transactions && tokens && !transactionTabIndex) {
@@ -127,7 +127,7 @@ export default function AdminPage() {
 
   useEffect(() => {
     const user = users?.find(user => user.id === Number(userIndex));
-    if (user && userTabIndex) {
+    if (!!user && !!userTabIndex) {
       setName(user.name);
       setAddress(user.address);
       setIsPublic(Boolean(user.ispublic));
@@ -138,7 +138,7 @@ export default function AdminPage() {
 
   useEffect(() => {
     const transaction = transactions?.find(transaction => transaction.id === Number(transactionIndex));
-    if (transaction && transactionTabIndex) {
+    if (!!transaction && !!transactionTabIndex) {
       setDate(new Date(transaction.date));
       setTransactionAddress(transaction.address);
       setTransactionType(TransactionType[getTransactionType(transaction)]);
@@ -158,7 +158,7 @@ export default function AdminPage() {
     const filteredTransactions = transactions
       ?.filter(transaction => transactionFilter === '0' || transaction.userid === Number(transactionFilter))
       .sort((a, b) => (b.id ?? 0) - (a.id ?? 0));
-    setTransactionIndex(filteredTransactions?.[0]?.id?.toString() ?? '');
+    setTransactionIndex(filteredTransactions?.at(0)?.id?.toString() ?? '');
 
     const userAddress = users?.find(
       user => user.id === Number(transactionFilter) && user.name !== user.address,
@@ -532,22 +532,34 @@ export default function AdminPage() {
             icon={CurrencyEuroIcon}
             step={1}
             min={0}
-            max={100000}
+            max={10000}
             disabled={transactionTabIndex === 2}
+            error={(!!tokenAmount && !tokenPrice) || (!tokenAmount && !!tokenPrice)}
+            errorMessage="The token price / amount should be set!"
           />
-          <Switch
-            className={cls(!isTransactionType(TransactionType.donation) ? 'visible' : 'hidden', 'self-center')}
-            checked={hasCost}
-            onChange={setHasCost}
-            disabled={transactionTabIndex === 2}
-          />
-          <Text className={cls(!isTransactionType(TransactionType.donation) ? 'visible' : 'hidden', 'self-center')}>
-            Include cost
-          </Text>
+          <Flex
+            className={cls(
+              'max-w-sm min-w-32 space-x-2',
+              !isTransactionType(TransactionType.donation) ? 'visible' : 'hidden',
+            )}
+            flexDirection="row"
+            justifyContent="start"
+            alignItems="center"
+          >
+            <Switch
+              className={transactionTabIndex !== 2 ? 'visible' : 'hidden'}
+              checked={hasCost}
+              onChange={setHasCost}
+            />
+            <Text>{hasCost ? `Costs ${getTransactionDetails().cost.toLocaleCurrency()}` : 'Free'}</Text>
+          </Flex>
+          <Title className={isValidTransaction ? 'visible' : 'hidden'}>
+            {!isNaN(getTransactionDetails().value) ? getTransactionDetails().value.toCurrency() : 'Error'}
+          </Title>
           <Button
-            className="flex font-bold self-center"
+            className="flex font-bold col-span-2"
             disabled={!isValidTransaction}
-            style={{ borderRadius: 24 }}
+            style={{ borderRadius: 24, justifySelf: 'center' }}
             loading={transactionLoading}
             onClick={updateTransaction}
           >
@@ -555,33 +567,38 @@ export default function AdminPage() {
           </Button>
         </Grid>
       </Card>
-
-      <Card className={cls(cryptoTransactions ? 'visible' : 'hidden')}>
+      <Card className={cls('col-span-2', cryptoTransactions ? 'visible' : 'hidden')}>
         <Title>Crypto Transactions</Title>
-        <Table>
+        <Table className="w-full">
           <TableHead>
             <TableRow>
               <TableHeaderCell>Date</TableHeaderCell>
               <TableHeaderCell>Address</TableHeaderCell>
-              <TableHeaderCell>Amount</TableHeaderCell>
-              <TableHeaderCell>Token</TableHeaderCell>
-              <TableHeaderCell>Movement</TableHeaderCell>
-              <TableHeaderCell>Cost</TableHeaderCell>
               <TableHeaderCell>Type</TableHeaderCell>
+              <TableHeaderCell>Token</TableHeaderCell>
+              <TableHeaderCell>Cost</TableHeaderCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {cryptoTransactions?.map(({ date, address, amount, token, movement, cost, type }, index) => (
-              <TableRow key={index}>
-                <TableCell>{date.toLocaleString()}</TableCell>
-                <TableCell>{address}</TableCell>
-                <TableCell>{Number(amount).toDecimalPlace(2, 'down')}</TableCell>
-                <TableCell>{token}</TableCell>
-                <TableCell>{Number(movement).toDecimalPlace(2, 'down')}</TableCell>
-                <TableCell>{Number(cost).toDecimalPlace(2, 'down')}</TableCell>
-                <TableCell>{TransactionType[type]}</TableCell>
+            {cryptoTransactions?.length ? (
+              cryptoTransactions.map(({ date, address, type, token, amount, cost }) => (
+                <TableRow key={new Date(date).getTime()}>
+                  <TableCell>{date.toLocaleString()}</TableCell>
+                  <TableCell>{address}</TableCell>
+                  <TableCell>{type !== undefined ? TransactionType[type].normalize() : ''}</TableCell>
+                  <TableCell>
+                    {amount?.toFixed(2)} {token}
+                  </TableCell>
+                  <TableCell>{cost.toLocaleCurrency()}</TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell className="text-center" colSpan={5}>
+                  Loading ...
+                </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </Card>
@@ -590,4 +607,3 @@ export default function AdminPage() {
     <Loading />
   );
 }
-
