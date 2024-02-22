@@ -2,7 +2,6 @@ import { Disclosure } from '@headlessui/react';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import { Button, Tab, TabGroup, TabList } from '@tremor/react';
 import { useEffect, useState } from 'react';
-import { BarkLogo } from './bark-logo';
 import { usePopup } from '../contexts/PopupProvider';
 import { Page, useNavigation } from '../hooks/useNavigation';
 import { useUser } from '../hooks/useUser';
@@ -14,10 +13,10 @@ import Disconnect from './disconnect';
 const t: Dataset = {
   connect: 'Connect',
   disconnect: 'Disconnect',
-  dashboard: 'BARK',
-  portfolio: 'My Account',
+  dashboard: 'Dashboard',
+  portfolio: 'Portfolio',
   transactions: 'Transactions',
-  users: 'Users',
+  users: 'User',
 };
 
 export default function Navbar() {
@@ -25,11 +24,9 @@ export default function Navbar() {
   const { page: currentPage, setPage, pages } = useNavigation();
   const { user, isConnected } = useUser();
 
-  const [isAdmin, setIsAdmin] = useState(false);
+  const isAdmin = window.location.pathname === '/admin' && window.location.hostname === 'localhost';
 
-  useEffect(() => {
-    setIsAdmin(window.location.pathname === '/admin' && window.location.hostname === 'localhost');
-  }, []);
+  const canClick = (condition, callback) => (condition ? callback : undefined);
 
   return (
     <Disclosure
@@ -50,9 +47,9 @@ export default function Navbar() {
                       'flex flex-shrink-0 items-center',
                       isConnected && currentPage !== Page.Dashboard ? 'cursor-pointer' : '',
                     )}
-                    onClick={isConnected && currentPage !== Page.Dashboard ? () => setPage(Page.Dashboard) : undefined}
+                    onClick={canClick(isConnected && currentPage !== Page.Dashboard, () => setPage(Page.Dashboard))}
                   >
-                    <BarkLogo />
+                    <FiMsLogo />
                   </a>
                   <div className={cls('contents', isConnected ? 'animate-display' : 'hidden')}>
                     <TabGroup
@@ -60,10 +57,10 @@ export default function Navbar() {
                       style={{ marginTop: '15px' }}
                       defaultIndex={pages.indexOf(currentPage ?? Page.Dashboard)}
                       index={pages.indexOf(currentPage ?? Page.Dashboard)}
-                      onIndexChange={i => setPage(pages[i])}
+                      onIndexChange={(i) => setPage(pages[i])}
                     >
                       <TabList>
-                        {pages.map(page => (
+                        {pages.map((page) => (
                           <Tab
                             className={cls(
                               'text-[20px] hover:text-gray-700 hover:font-bold',
@@ -134,7 +131,7 @@ export default function Navbar() {
           {isConnected && !isAdmin && (
             <Disclosure.Panel className="sm:hidden animate-display">
               <div className="space-y-1 pt-2 pb-3">
-                {pages.map(page => (
+                {pages.map((page) => (
                   <Disclosure.Button
                     key={page}
                     className={cls(
