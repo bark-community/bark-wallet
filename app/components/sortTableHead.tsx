@@ -15,11 +15,11 @@ export function SortHeader({
   setTable: (table: any[] | undefined) => void;
 }) {
   const [filters, setFilters] = useState<Filter[]>(['descending', 'none', 'none']);
+
   const changeFilter = (index: number) => {
-    const newFilters = [...filters];
-    newFilters.forEach((filter, i) => {
-      newFilters[i] = i === index ? (filter === 'ascending' ? 'descending' : 'ascending') : 'none';
-    });
+    const newFilters = filters.map((filter, i) =>
+      i === index ? (filter === 'ascending' ? 'descending' : 'ascending') : 'none'
+    );
     setFilters(newFilters);
 
     if (table?.length) {
@@ -60,8 +60,8 @@ export function SortHeader({
             filters[index] === 'ascending'
               ? ChevronUpIcon
               : filters[index] === 'descending'
-                ? ChevronDownIcon
-                : ChevronUpDownIcon
+              ? ChevronDownIcon
+              : ChevronUpDownIcon
           }
         />
       )}
