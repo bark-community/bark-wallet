@@ -1,5 +1,8 @@
-import { DocumentDuplicateIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
-import { InformationCircleIcon } from '@heroicons/react/24/solid';
+import {
+  DocumentDuplicateIcon,
+  InformationCircleIcon,
+  MagnifyingGlassIcon,
+} from '@heroicons/react/24/outline';
 import {
   Card,
   Flex,
@@ -24,17 +27,18 @@ import { DataName, loadData } from '../utils/processData';
 import { Dataset } from '../utils/types';
 
 const t: Dataset = {
-  usersList: 'User list',
+  usersList: 'List of Users',
   noUserFound: 'No users found',
   userLoading: 'Loading users...',
-  selectUser: 'Select UUser',
+  selectUser: 'Select a user',
   search: 'Search',
   name: 'Name',
   address: 'Address',
-  copy: 'Copier',
-  private: 'Privacy',
+  copy: 'Copy',
+  private: 'Private',
   public: 'Public',
-  appearance: 'Be visible to other users BARK ?',
+  appearance: 'Be visible to other BARK´s users?',
+  searchByName: 'Search by name',
 };
 
 export interface DBUser extends User {
@@ -43,7 +47,7 @@ export interface DBUser extends User {
 
 const thisPage = Page.Users;
 
-export default function Users() {
+const Users = () => {
   const { user: currentUser } = useUser();
   const { page, needRefresh, setNeedRefresh } = useNavigation();
 
@@ -51,19 +55,26 @@ export default function Users() {
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [isPublic, setIsPublic] = useState<boolean>();
 
-  const isUserSelected = (user: User) => selectedUsers.includes(user.name) || !selectedUsers.length;
+  const isUserSelected = (user: User) =>
+    selectedUsers.includes(user.name) || !selectedUsers.length;
 
   const processUsers = useCallback(
     (users: DBUser[]) => {
-      setIsPublic(users.find(user => user.name === currentUser?.name)?.ispublic);
+      setIsPublic(
+        users.find((user) => user.name === currentUser?.name)?.ispublic
+      );
       setUsers(
         users
-          .filter(user => (user.ispublic || user.name === currentUser?.name) && user.address !== user.name)
+          .filter(
+            (user) =>
+              (user.ispublic || user.name === currentUser?.name) &&
+              user.address !== user.name
+          )
           .sort((a, b) => a.name.localeCompare(b.name))
-          .sort((a, _) => (a.name === currentUser?.name ? -1 : 0)), // Put the current user on top
+          .sort((a, _) => (a.name === currentUser?.name ? -1 : 0)) // Place the current user at the top
       );
     },
-    [currentUser?.name],
+    [currentUser?.name]
   );
 
   const isLoading = useRef(false);
@@ -76,7 +87,7 @@ export default function Users() {
     loadData(DataName.portfolio)
       .then(processUsers)
       .then(() => fetch('/api/database/getUsers'))
-      .then(result => (result.ok ? result.json() : undefined))
+      .then((result) => (result.ok ? result.json() : undefined))
       .then(processUsers)
       .catch(console.error)
       .finally(() => (isLoading.current = false));
@@ -92,7 +103,7 @@ export default function Users() {
       method: 'POST',
       body: JSON.stringify({ address: currentUser.address, isPublic: value }),
     })
-      .then(result => (result.ok ? setIsPublic(value) : undefined))
+      .then((result) => (result.ok ? setIsPublic(value) : undefined))
       .catch(console.error)
       .finally(() => {
         isUpdatingUserPrivacy.current = false;
@@ -120,11 +131,19 @@ export default function Users() {
                 tooltip={tooltipText}
                 color="gray"
                 onClick={() => {
-                  isMobileDevice() ? setTooltipText(tooltipText !== t.appearance ? t.appearance : '') : null;
+                  isMobileDevice()
+                    ? setTooltipText(
+                        tooltipText !== t.appearance ? t.appearance : ''
+                      )
+                    : null;
                 }}
               />
               <Text className="mr-2">{isPublic ? t.public : t.private}</Text>
-              <Switch disabled={isUpdatingUserPrivacy.current} checked={isPublic} onChange={handleSwitchChange} />
+              <Switch
+                disabled={isUpdatingUserPrivacy.current}
+                checked={isPublic}
+                onChange={handleSwitchChange}
+              />
             </Flex>
           )}
         </Flex>
@@ -145,7 +164,7 @@ export default function Users() {
               value={selectedUsers}
               onValueChange={setSelectedUsers}
             >
-              {users?.map(item => (
+              {users?.map((item) => (
                 <MultiSelectItem key={item.name} value={item.name}>
                   {item.name}
                 </MultiSelectItem>
@@ -154,39 +173,47 @@ export default function Users() {
           </Flex>
         )}
         <Table>
-          <SortTableHead labels={[t.name, t.address, t.copy]} table={users} setTable={setUsers} />
+          <SortTableHead
+            labels={[t.name, t.address, t.copy]}
+            table={users}
+            setTable={setUsers}
+          />
           <TableBody>
             {users?.length ? (
-              users.filter(isUserSelected).map(user => (
-                <TableRow
-                  key={user.name}
-                  className={cls(
-                    'cursor-pointer',
-                    'hover:bg-tremor-background-subtle dark:hover:bg-dark-tremor-background-subtle',
-                    user.name === currentUser?.name ? 'bg-tremor-border dark:bg-dark-tremor-border' : '',
-                  )}
-                  onClick={() => {
-                    navigator.clipboard.writeText(user.address);
-                  }}
-                >
-                  <TableCell>{user.name}</TableCell>
-                  <TableCell>
-                    <Text>{getShortAddress(user.address)}</Text>
-                  </TableCell>
-                  <TableCell>
-                    <DocumentDuplicateIcon
-                      className={cls(
-                        'h-5 w-5 ml-3 cursor-pointer',
-                        'text-tremor-content-subtle dark:text-dark-tremor-content-subtle',
-                        'hover:text-tremor-content dark:hover:text-dark-tremor-content',
-                      )}
-                      onClick={() => {
-                        navigator.clipboard.writeText(user.address);
-                      }}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))
+              users
+                .filter(isUserSelected)
+                .map((user) => (
+                  <TableRow
+                    key={user.name}
+                    className={cls(
+                      'cursor-pointer',
+                      'hover:bg-tremor-background-subtle dark:hover:bg-dark-tremor-background-subtle',
+                      user.name === currentUser?.name
+                        ? 'bg-tremor-border dark:bg-dark-tremor-border'
+                        : ''
+                    )}
+                    onClick={() => {
+                      navigator.clipboard.writeText(user.address);
+                    }}
+                  >
+                    <TableCell>{user.name}</TableCell>
+                    <TableCell>
+                      <Text>{getShortAddress(user.address)}</Text>
+                    </TableCell>
+                    <TableCell>
+                      <DocumentDuplicateIcon
+                        className={cls(
+                          'h-5 w-5 ml-3 cursor-pointer',
+                          'text-tremor-content-subtle dark:text-dark-tremor-content-subtle',
+                          'hover:text-tremor-content dark:hover:text-dark-tremor-content'
+                        )}
+                        onClick={() => {
+                          navigator.clipboard.writeText(user.address);
+                        }}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))
             ) : (
               <TableRow>
                 <TableCell colSpan={3} className="text-center">
@@ -199,4 +226,6 @@ export default function Users() {
       </Card>
     </>
   );
-}
+};
+
+export default Users;
