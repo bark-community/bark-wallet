@@ -23,7 +23,6 @@ import { cls } from '../utils/constants';
 import { isMobileSize, useIsMobile } from '../utils/mobile';
 import { loadData } from '../utils/processData';
 import { Data, DataName, Dataset, Filter } from '../utils/types';
-import { getRatio, getValue } from '../utils/dataUtils';
 
 // ... (other imports)
 
