@@ -5,8 +5,8 @@ import { useUser } from '../hooks/useUser';
 import { Dataset } from '../utils/types';
 
 const t: Dataset = {
-  disconnect: 'Disconnect',
-  goodBye: 'Goodbye !',
+  disconnect: 'Disconnect?',
+  goodBye: 'Goodbye!',
 };
 
 export default function Disconnect() {
@@ -18,18 +18,19 @@ export default function Disconnect() {
     closePopup();
   }, [closePopup, disconnect]);
 
-  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
   useEffect(() => {
-    // Focus the input when the popup is opened
+    // Focus the button when the popup is opened
     if (isPopupOpen && buttonRef.current) {
-      setTimeout(() => buttonRef.current?.focus(), 100);
+      buttonRef.current.focus();
     }
   }, [isPopupOpen]);
 
   return (
     <Flex flexDirection="col">
       <Title className="mb-6">{t.disconnect}</Title>
-      <Button ref={buttonRef} className="flex font-bold" style={{ borderRadius: 24 }} onClick={handleDisconnect}>
+      <Button ref={buttonRef} className="flex font-bold" style={{ borderRadius: 16 }} onClick={handleDisconnect}>
         {t.goodBye}
       </Button>
     </Flex>
