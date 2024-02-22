@@ -1,5 +1,4 @@
 import './globals.css';
-
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import Navbar from './components/navbar';
 import Toast from './components/toast';
@@ -12,7 +11,7 @@ export const metadata = {
   description: 'BARK Wallet is a secure and user-friendly wallet designed for managing BARK tokens on the Solana blockchain.',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+const RootLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     <html lang="fr">
       <body className="flex flex-col h-screen bg-tremor-background-subtle dark:bg-dark-tremor-background-subtle">
@@ -29,4 +28,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </body>
     </html>
   );
-}
+};
+
+export default RootLayout;
