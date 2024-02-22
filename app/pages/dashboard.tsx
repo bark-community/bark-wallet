@@ -1,383 +1,289 @@
-import { ChartPieIcon, ChevronLeftIcon, ChevronRightIcon, ListBulletIcon } from '@heroicons/react/24/outline';
 import {
   Accordion,
   AccordionBody,
   AccordionHeader,
   AreaChart,
   BadgeDelta,
-  BarList,
+  Divider,
   Flex,
-  Grid,
   Metric,
   SparkAreaChart,
-  Tab,
-  TabGroup,
-  TabList,
+  Table,
+  TableBody,
+  TableCell,
+  TableRow,
   Title,
 } from '@tremor/react';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import GainsBar from '../components/gainsBar';
 import { Page, useNavigation } from '../hooks/useNavigation';
-import { useWindowParam } from '../hooks/useWindowParam';
-import { getBarData } from '../utils/chart';
-import { cls } from '../utils/constants';
-import {} from '../utils/extensions';
-import { isMobileSize, useIsMobile } from '../utils/mobile';
-import { DataName, loadData } from '../utils/processData';
+import { useUser } from '../hooks/useUser';
+import { TOKEN_PATH } from '../utils/constants';
+import { isMobileSize } from '../utils/mobile';
+import { DataName, forceData, loadData } from '../utils/processData';
 import { Data, Dataset } from '../utils/types';
 
-const tokenValueStart = 100;
-
-const t: Dataset = {
-  price: 'Price',
-  result: 'Results BARK',
+const dataset: Dataset = {
+  totalValue: 'Total Value',
+  assets: 'Assets',
+  emptyPortfolio: 'No assets found',
+  dataLoading: 'Loading data...',
+  tokenLogo: 'Token Logo',
   total: 'Total',
-  profit: 'Profit',
-  gains: 'Gains',
-  assets: 'Value total',
-  transfered: 'Investment',
-  currency: 'Currency',
-  type: 'Type',
-  'transfer cost': 'Transfers',
-  'strategy cost': 'Strategy',
-  'price change': 'Price',
-  charity: 'Charity',
+  transfered: 'Invested',
   loading: 'Loading...',
-  amount: 'Amount',
 };
 
-export interface DashboardToken extends Data {
-  available: number;
-  duration: number;
+export interface PortfolioToken extends Data {
+  symbol: string;
 }
 
-export interface Historic {
+interface Asset {
+  name: string;
+  symbol: string;
+  balance: number;
+}
+
+export interface Portfolio {
+  id: number;
+  address: string;
+  token: number[];
+  total: number;
+  invested: number;
+  profitValue: number;
+  profitRatio: number;
+  yearlyYield: number;
+  solProfitPrice: number;
+}
+
+interface Wallet {
+  image: string;
+  name: string;
+  symbol: string;
+  balance: number;
+  value: number;
+  total: number;
+}
+
+export interface UserHistoric {
   date: number;
   stringDate: string;
-  Investment: number;
-  Treasury: number;
+  Investi: number;
+  Total: number;
 }
 
-interface TokenHistoric {
-  date: string;
-  amount: number;
-}
+const thisPage = Page.Portfolio;
 
-const today = new Date();
-const thisPage = Page.Dashboard;
-
-export default function Dashboard() {
+const Portfolio = () => {
+  const { user } = useUser();
   const { page, needRefresh, setNeedRefresh } = useNavigation();
 
-  const [dashboard, setDashboard] = useState<Data[]>([]);
-  const [token, setToken] = useState<DashboardToken[]>([]);
-  const [historic, setHistoric] = useState<Historic[]>([]);
-  const [tokenHistoric, setTokenHistoric] = useState<TokenHistoric[][]>([]);
-  const [tokenHistoricLimit, setTokenHistoricLimit] = useState<{ min: number; max: number }>();
+  const [wallet, setWallet] = useState<Wallet[]>();
+  const [portfolio, setPortfolio] = useState<Portfolio>();
+  const [historic, setHistoric] = useState<UserHistoric[]>([]);
 
-  const findValue = useCallback((data: Data[], label: string | undefined) => {
-    return label ? data.find(d => d.label.toLowerCase().includes(label.toLowerCase())) : undefined;
-  }, []);
-  const getValue = useCallback(
-    (data: Data[], label: string | undefined, defaultValue = 0) => {
-      return (findValue(data, label)?.value ?? defaultValue).toLocaleCurrency();
-    },
-    [findValue],
-  );
-  const getRatio = useCallback(
-    (data: Data[], label: string | undefined, defaultValue = 0) => {
-      return (findValue(data, label)?.ratio ?? defaultValue).toRatio();
-    },
-    [findValue],
-  );
-
-  const generateTokenHistoric = useCallback(
-    (token: DashboardToken[]) => {
-      token = token.filter(({ label, available }) => available && label !== 'Euro'); // TODO : remove this line when Euro is removed from the spreadsheet
-
-      setToken(token);
-
-      let min = tokenValueStart;
-      let max = tokenValueStart;
-      const tokenHisto: TokenHistoric[][] = [];
-      token.forEach(t => {
-        const tokenValueEnd = tokenValueStart * (1 + parseFloat(getRatio(token, t.label)) / 100);
-        tokenHisto.push([
-          {
-            date: new Date(today.getTime() - t.duration * 24 * 60 * 60 * 1000).toLocaleDateString(),
-            amount: tokenValueStart,
-          },
-          {
-            date: today.toLocaleDateString(),
-            amount: tokenValueEnd,
-          },
-        ]);
-        min = Math.min(min, tokenValueEnd);
-        max = Math.max(max, tokenValueEnd);
-      });
-      setTokenHistoric(tokenHistoric);
-      setTokenHistoricLimit({
-        min: min,
-        max: max,
-      });
-    },
-    [getRatio],
-  );
+  const loadAssets = async (address: string, hasFiMsToken: boolean) => {
+    try {
+      const result = await fetch(`/api/solana/getAssets?address=${address}${hasFiMsToken ? '&creator=CCLcWAJX6fubUqGyZWz8dyUGEddRj8h4XZZCNSDzMVx4' : ''}`);
+      if (!result.ok) throw new Error('Failed to fetch assets');
+      return await result.json();
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const isLoading = useRef(false);
+
   useEffect(() => {
-    if (isLoading.current || !needRefresh || page !== thisPage) return;
+    if (!user || isLoading.current || !needRefresh || page !== thisPage) return;
 
     isLoading.current = true;
     setNeedRefresh(false);
 
-    loadData(DataName.dashboard)
-      .then(setDashboard)
-      .then(() => loadData(DataName.token))
-      .then(generateTokenHistoric)
-      .then(() => loadData(DataName.historic))
+    loadData(DataName.token)
+      .then((tokens: PortfolioToken[]) =>
+        loadData(DataName.portfolio)
+          .then(async (data: Portfolio[]) => {
+            if (!data.length) data = await forceData(DataName.portfolio);
+            if (!tokens.length) tokens = await forceData(DataName.token);
+
+            const p = data.find(d => d.id === user.id) ?? {
+              id: user.id,
+              address: user.address,
+              token: [],
+              total: 0,
+              invested: 0,
+              profitValue: 0,
+              profitRatio: 0,
+              yearlyYield: 0,
+              solProfitPrice: 0,
+            };
+            const assets = await loadAssets(user.address, !!p.total);
+            if (assets?.length) {
+              p.total = assets.reduce(
+                (a, b) => a + (b.balance ?? 0) * (tokens.find(t => t.label === b.name)?.value ?? 0),
+                0,
+              );
+              p.profitValue = p.total - p.invested;
+              p.profitRatio = p.invested ? p.profitValue / p.invested : 0;
+              p.token = tokens.map(t => assets.find(a => a.name === t.label)?.balance ?? 0);
+            }
+            setPortfolio(p);
+
+            setWallet(
+              tokens
+                .map((t, i) => ({
+                  image: TOKEN_PATH + t.label.replaceAll(' ', '') + '.png',
+                  name: t.label,
+                  symbol: t.symbol,
+                  balance: p.token[i],
+                  value: t.value,
+                  total: p.token[i] * t.value,
+                }))
+                .filter(t => t.balance)
+                .sort((a, b) => b.total - a.total),
+            );
+          })
+          .catch(console.error),
+      )
+      .then(() => loadData(user.name))
       .then(setHistoric)
       .catch(console.error)
       .finally(() => (isLoading.current = false));
-  }, [needRefresh, setNeedRefresh, page, generateTokenHistoric]);
+  }, [needRefresh, setNeedRefresh, page, user]);
 
-  const getBarList = useCallback(
-    (labels: string[]) => {
-      return labels
-        .map(label => {
-          return getBarData(t[label] ?? label, getValue(dashboard, label).fromCurrency());
-        })
-        .sort((a, b) => b.value - a.value);
-    },
-    [getValue, dashboard],
-  );
-
-  const result = [
-    {
-      category: t.total,
-      total: getValue(dashboard, 'total', 100000),
-      data: getBarList(['Solana', 'Bitcoin', 'Nexo', 'BARK']),
-    },
-    {
-      category: t.profit,
-      total: getValue(dashboard, 'profit', 10000),
-      data: getBarList(['transfer cost', 'strategy cost', 'price change', 'charity']),
-    },
-  ];
-
-  const isDesktop = useIsMobile(1280); // xl for tailwindcss breakpoints
-  const width = useWindowParam().width;
-  const isTokenListExpanded = (width > 400 && width < 640) || width > 970;
-
-  const [resultIndex, setResultIndex] = useState(0);
-  const [priceIndex, setPriceIndex] = useState(0);
-  const changeToken = useCallback(
-    (increment = true) => {
-      setTimeout(() => {
-        setPriceIndex(((priceIndex ? priceIndex : token.length) + (increment ? 1 : -1)) % token.length);
-      }, 100); // Wait for indexChange event to be triggered
-    },
-    [priceIndex, token.length],
-  );
+  const { minHisto, maxHisto } = useMemo(() => {
+    const minHisto = Math.min(...[...historic.map(d => d.Investi), ...historic.map(d => d.Total)]).toDecimalPlace(3, 'down');
+    const maxHisto = Math.max(...[...historic.map(d => d.Investi), ...historic.map(d => d.Total)]).toDecimalPlace(3, 'up');
+    return { minHisto, maxHisto };
+  }, [historic]);
 
   return (
     <>
-      <Accordion defaultOpen={!isMobileSize()}>
+      <Accordion defaultOpen={true}>
         <AccordionHeader>
           <Flex alignItems="start">
             <div>
-              <Title className="text-left">{t.assets}</Title>
-              <Metric color="green" className={!dashboard.length ? 'blur-sm' : 'animate-unblur'}>
-                {getValue(dashboard, 'assets', 500000)}
+              <Title className="text-left">{dataset.totalValue}</Title>
+              <Metric color="green" className={!portfolio ? 'blur-sm' : 'animate-unblur'}>
+                {(portfolio?.total ?? 0).toLocaleCurrency()}
               </Metric>
             </div>
             <BadgeDelta
+              className={portfolio?.yearlyYield ? 'visible' : 'hidden'}
               deltaType={
-                parseFloat(getRatio(dashboard, 'price @')) < 0
+                portfolio && portfolio?.yearlyYield < 0
                   ? 'moderateDecrease'
-                  : parseFloat(getRatio(dashboard, 'price @')) > 0
+                  : portfolio && portfolio?.yearlyYield > 0
                     ? 'moderateIncrease'
                     : 'unchanged'
               }
             >
-              {getRatio(dashboard, 'price @')}
+              {(portfolio?.yearlyYield ?? 0).toRatio()}
             </BadgeDelta>
           </Flex>
         </AccordionHeader>
         <AccordionBody>
-          <GainsBar
-            values={{
-              invested: getValue(dashboard, 'transfered').fromCurrency(),
-              profitValue: getValue(dashboard, 'gains').fromCurrency(),
-              profitRatio: parseFloat(getRatio(dashboard, 'gains')) / 100,
-            }}
-            loaded={!!dashboard.length}
-          />
+          {!portfolio || portfolio.invested ? <GainsBar values={portfolio} loaded={!!portfolio} /> : null}
+          {!wallet || wallet.length ? <Divider style={{ fontSize: 18 }}>{dataset.assets}</Divider> : null}
+
+          {wallet ? (
+            <Table>
+              <TableBody>
+                {wallet.map(asset => (
+                  <TableRow
+                    key={asset.name}
+                    className="hover:bg-tremor-background-subtle dark:hover:bg-dark-tremor-background-subtle"
+                  >
+                    <TableCell>
+                      <Image
+                        className="rounded-full"
+                        src={asset.image}
+                        alt={dataset.tokenLogo}
+                        width={50}
+                        height={50}
+                      ></Image>
+                    </TableCell>
+                    <TableCell>
+                      <Flex justifyContent="between">
+                        <div className="text-xl truncate">{asset.name}</div>
+                        <div>{`${asset.balance.toShortFixed()} ${asset.symbol}`}</div>
+                      </Flex>
+                      <Flex justifyContent="between">
+                        <div>{asset.value ? asset.value.toLocaleCurrency() : ''}</div>
+                        <div className="font-bold text-lg">{asset.total.toLocaleCurrency()}</div>
+                      </Flex>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <Table>
+              <TableBody>
+                <TableRow className="animate-pulse">
+                  <TableCell>
+                    <div className="rounded-full w-[50px] h-[50px] bg-tremor-border"></div>
+                  </TableCell>
+                  <TableCell>
+                    <Flex justifyContent="between">
+                      <div className="bg-tremor-border w-24 h-7 mb-1 rounded-md"></div>
+                      <div className="bg-tremor-border w-10 h-5 mb-1 rounded-md"></div>
+                    </Flex>
+                    <Flex justifyContent="between">
+                      <div className="bg-tremor-border w-16 h-5 mb-1 rounded-md"></div>
+                      <div className="bg-tremor-border w-24 h-7 mb-1 rounded-md"></div>
+                    </Flex>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          )}
         </AccordionBody>
       </Accordion>
 
-      <Grid numItemsSm={2} numItemsLg={result.length} className="gap-6">
-        <Accordion defaultOpen={!isMobileSize()}>
+      {!portfolio || portfolio?.invested ? (
+        <Accordion className="group" defaultOpen={!isMobileSize()}>
           <AccordionHeader>
-            <Flex alignItems="start" flexDirection="col">
-              <Flex alignItems="start" flexDirection={!isDesktop ? 'row' : 'col'}>
-                <Title className="text-left whitespace-nowrap">{t.result}</Title>
-                <TabGroup index={resultIndex} onIndexChange={setResultIndex} className="mb-4 xl:mb-0 xl:text-right">
-                  <TabList
-                    className="float-left xl:float-right"
-                    variant={!isDesktop ? 'solid' : 'line'}
-                    onClick={e => e.stopPropagation()}
-                  >
-                    <Tab icon={ChartPieIcon}>{t.total}</Tab>
-                    <Tab icon={ListBulletIcon}>{t.profit}</Tab>
-                  </TabList>
-                </TabGroup>
+            <Title>Performance</Title>
+            {historic.length > 1 && (
+              <Flex className="w-full" justifyContent="center">
+                <SparkAreaChart
+                  data={historic.sort((a, b) => a.date - b.date)}
+                  categories={[dataset.total]}
+                  index={'stringDate'}
+                  colors={['emerald']}
+                  className="ml-4 h-10 w-[80%] text-center animate-display group-data-[headlessui-state=open]:invisible"
+                  curveType="monotone"
+                  noDataText={dataset.loading}
+                />
               </Flex>
-              <Flex alignItems="start">
-                <Metric
-                  color={result[resultIndex].total.fromCurrency() < 0 ? 'red' : 'green'}
-                  className={!dashboard.length ? 'blur-sm' : 'animate-unblur'}
-                >
-                  {result[resultIndex].total}
-                </Metric>
-                <BadgeDelta
-                  className="mt-2"
-                  deltaType={
-                    parseFloat(getRatio(dashboard, 'profit')) < 0
-                      ? 'moderateDecrease'
-                      : parseFloat(getRatio(dashboard, 'profit')) > 0
-                        ? 'moderateIncrease'
-                        : 'unchanged'
-                  }
-                >
-                  {getRatio(dashboard, 'profit')}
-                </BadgeDelta>
-              </Flex>
-            </Flex>
-          </AccordionHeader>
-          <AccordionBody>
-            <BarList
-              data-testid="bar-chart"
-              data={result[resultIndex].data}
-              showAnimation={true}
-              valueFormatter={(number: number) =>
-                (result[resultIndex].data.find(d => d.value === number)?.amount ?? number).toLocaleCurrency()
-              }
-              className="mt-2"
-            />
-          </AccordionBody>
-        </Accordion>
-        <Accordion defaultOpen={!isMobileSize()}>
-          <AccordionHeader>
-            <Flex alignItems="start" flexDirection="col">
-              <Flex alignItems="start" flexDirection={!isDesktop ? 'row' : 'col'}>
-                <Title className="text-left">{t.price}</Title>
-                <TabGroup
-                  index={priceIndex}
-                  onIndexChange={isTokenListExpanded ? setPriceIndex : undefined}
-                  className="mb-4 xl:mb-0 xl:text-right max-w-[200px]"
-                >
-                  <TabList
-                    className="float-left xl:float-right"
-                    variant={!isDesktop ? 'solid' : 'line'}
-                    onClick={e => e.stopPropagation()}
-                  >
-                    <Flex>
-                      {token.map((t, i) => (
-                        <div className={isTokenListExpanded || priceIndex === i ? 'block' : 'hidden'} key={t.label}>
-                          <Flex>
-                            <ChevronLeftIcon
-                              className={cls('h-4 w-4 mr-2', !isTokenListExpanded ? 'block' : 'hidden')}
-                              onClick={() => changeToken(false)}
-                            />
-                            <Tab onClick={!isTokenListExpanded ? () => changeToken() : undefined}>{t.label}</Tab>
-                            <ChevronRightIcon
-                              className={cls('h-4 w-4 ml-2', !isTokenListExpanded ? 'block' : 'hidden')}
-                              onClick={() => changeToken(true)}
-                            />
-                          </Flex>
-                        </div>
-                      ))}
-                    </Flex>
-                  </TabList>
-                </TabGroup>
-              </Flex>
-              <Flex alignItems="start">
-                <Metric color="green" className={!token.length ? 'blur-sm' : 'animate-unblur'}>
-                  {getValue(token, token.at(priceIndex)?.label)}
-                </Metric>
-                <BadgeDelta
-                  className="mt-2"
-                  deltaType={
-                    parseFloat(getRatio(token, token.at(priceIndex)?.label)) < 0
-                      ? 'moderateDecrease'
-                      : parseFloat(getRatio(token, token.at(priceIndex)?.label)) > 0
-                        ? 'moderateIncrease'
-                        : 'unchanged'
-                  }
-                >
-                  {getRatio(token, token.at(priceIndex)?.label)}
-                </BadgeDelta>
-              </Flex>
-            </Flex>
+            )}
           </AccordionHeader>
           <AccordionBody>
             <AreaChart
-              className="h-44"
-              data={tokenHistoric[priceIndex]}
-              categories={[t.amount]}
-              index="date"
-              colors={[
-                tokenHistoric.length && tokenHistoric[priceIndex][0].Montant < tokenHistoric[priceIndex][1].Montant
-                  ? 'green'
-                  : 'red',
-              ]}
-              valueFormatter={number => number.toFixed(0)}
+              className="h-80"
+              data={historic.sort((a, b) => a.date - b.date)}
+              categories={[dataset.transfered, dataset.total]}
+              index="stringDate"
+              colors={['indigo', 'fuchsia']}
+              valueFormatter={number => number.toShortCurrency()}
               yAxisWidth={50}
               showAnimation={true}
               animationDuration={2000}
               curveType="monotone"
-              noDataText={t.loading}
-              minValue={tokenHistoricLimit?.min ?? 0}
-              maxValue={tokenHistoricLimit?.max ?? 0}
-              showLegend={false}
-              startEndOnly={true}
+              noDataText={dataset.loading}
+              minValue={minHisto}
+              maxValue={maxHisto}
             />
           </AccordionBody>
         </Accordion>
-      </Grid>
-      <Accordion className="group" defaultOpen={!isMobileSize()}>
-        <AccordionHeader>
-          <Title>Performance</Title>
-          {historic.length > 1 && (
-            <SparkAreaChart
-              className="ml-4 h-10 w-[80%] text-center animate-display group-data-[headlessui-state=open]:invisible"
-              data={historic.sort((a, b) => a.date - b.date)}
-              categories={[t.total]}
-              index={'stringDate'}
-              colors={['emerald']}
-              curveType="monotone"
-              noDataText={t.loading}
-            />
-          )}
-        </AccordionHeader>
-        <AccordionBody>
-          <AreaChart
-            className="h-80"
-            data={historic.sort((a, b) => a.date - b.date)}
-            categories={[t.transfered, t.total]}
-            index="stringDate"
-            colors={['indigo', 'fuchsia']}
-            valueFormatter={number => number.toShortCurrency()}
-            yAxisWidth={50}
-            showAnimation={true}
-            animationDuration={2000}
-            curveType="monotone"
-            noDataText={t.loading}
-          />
-        </AccordionBody>
-      </Accordion>
+      ) : null}
     </>
   );
-}
+};
+
+export default Portfolio;
+
