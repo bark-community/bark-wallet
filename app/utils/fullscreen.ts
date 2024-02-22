@@ -24,48 +24,55 @@ declare global {
 }
 
 export function isFullscreen(): boolean {
-  return (
-    typeof document !== 'undefined' &&
-    !!(
-      document.fullscreenElement ||
-      document.webkitCurrentFullScreenElement ||
-      document.webkitFullscreenElement ||
-      document.mozFullScreenElement ||
-      document.msFullscreenElement ||
-      document.webkitIsFullScreen ||
-      document.mozFullScreen
-    )
+  return !!(
+    document.fullscreenElement ||
+    document.webkitCurrentFullScreenElement ||
+    document.webkitFullscreenElement ||
+    document.mozFullScreenElement ||
+    document.msFullscreenElement ||
+    document.webkitIsFullScreen ||
+    document.mozFullScreen
   );
 }
 
-export function exitFullscreen(): void {
-  const exitFullscreen =
+export async function toggleFullscreen(): Promise<void> {
+  const toggleFullscreenAction = isFullscreen() ? exitFullscreen : requestFullscreen;
+
+  try {
+    await toggleFullscreenAction();
+  } catch (error) {
+    console.warn(error);
+  }
+}
+
+async function exitFullscreen(): Promise<void> {
+  const exitFullscreenMethod =
     document.exitFullscreen ||
     document.webkitExitFullscreen ||
     document.mozCancelFullScreen ||
     document.msExitFullscreen;
-  if (exitFullscreen) {
-    exitFullscreen.call(document).catch((error) => console.warn(error));
+
+  if (exitFullscreenMethod) {
+    try {
+      await exitFullscreenMethod.call(document);
+    } catch (error) {
+      console.warn(error);
+    }
   }
 }
 
-export function requestFullscreen(): void {
-  const requestFullscreen =
+async function requestFullscreen(): Promise<void> {
+  const requestFullscreenMethod =
     document.documentElement.requestFullscreen ||
     document.documentElement.webkitRequestFullscreen ||
     document.documentElement.mozRequestFullScreen ||
     document.documentElement.msRequestFullscreen;
-  if (requestFullscreen && !IS_LOCAL) {
-    requestFullscreen
-      .call(document.documentElement)
-      .catch((error) => console.warn(error));
-  }
-}
 
-export function toggleFullscreen(): void {
-  if (isFullscreen()) {
-    exitFullscreen();
-  } else {
-    requestFullscreen();
+  if (requestFullscreenMethod && !IS_LOCAL) {
+    try {
+      await requestFullscreenMethod.call(document.documentElement);
+    } catch (error) {
+      console.warn(error);
+    }
   }
 }
