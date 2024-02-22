@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react';
 
 export function useLocalStorage<T>(key: string, defaultState: T): [T, Dispatch<SetStateAction<T>>] {
-  const state = useState<T>(() => {
+  const [state, setState] = useState<T>(() => {
     try {
       const value = localStorage.getItem(key);
       if (value) return JSON.parse(value) as T;
@@ -13,9 +13,9 @@ export function useLocalStorage<T>(key: string, defaultState: T): [T, Dispatch<S
 
     return defaultState;
   });
-  const value = key ? state[0] : defaultState;
 
   const isFirstRenderRef = useRef(true);
+
   useEffect(() => {
     if (!key) {
       console.warn('useLocalStorage: key is not defined');
@@ -26,18 +26,19 @@ export function useLocalStorage<T>(key: string, defaultState: T): [T, Dispatch<S
       isFirstRenderRef.current = false;
       return;
     }
+
     try {
-      if (value === undefined) {
+      if (state === undefined) {
         localStorage.removeItem(key);
       } else {
-        localStorage.setItem(key, JSON.stringify(value));
+        localStorage.setItem(key, JSON.stringify(state));
       }
     } catch (error: any) {
       if (typeof window !== 'undefined') {
         console.error(error);
       }
     }
-  }, [value, key]);
+  }, [state, key]); // Use the state callback function instead of the value
 
-  return state;
+  return [state, setState];
 }
