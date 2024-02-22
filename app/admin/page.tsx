@@ -1,4 +1,4 @@
-'use client';
+// 'use client';
 
 import { CurrencyEuroIcon } from '@heroicons/react/24/solid';
 import { PublicKey } from '@solana/web3.js';
@@ -27,13 +27,14 @@ import {
   Title,
 } from '@tremor/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import Loading from '../loading';
 import { PortfolioToken } from '../pages/portfolio';
 import { HeliusTransaction, Transaction, TransactionType, getTransactionType } from '../pages/transactions';
 import { DBUser } from '../pages/users';
 import { cls, getShortAddress } from '../utils/constants';
+import {} from '../utils/extensions';
 import { DataName, loadData } from '../utils/processData';
 import { MinMax } from '../utils/types';
-import NotFound from '../not-found';
 
 const transactionCost = 0.5;
 const nameLimit: MinMax = { min: 5, max: 25 };
@@ -73,7 +74,7 @@ export default function AdminPage() {
     setName('');
     setAddress('');
     setIsPublic(false);
-    if (userTabIndex && users?.length) setUserIndex(users?.at(0)?.id.toString() ?? '1'); // Init users on edit/delete only
+    if (userTabIndex && users?.length) setUserIndex(users?.[0]?.id.toString() ?? '1'); // Init users on edit/delete only
   }, [userTabIndex, users]);
 
   const initTransaction = useCallback(() => {
@@ -86,33 +87,36 @@ export default function AdminPage() {
     setTokenPrice(0);
     setHasCost(false);
     if (transactionTabIndex && transactions?.length)
-      setTransactionIndex(transactions?.at(transactions.length - 1)?.id?.toString() ?? '1');
+      setTransactionIndex(transactions?.[transactions.length - 1]?.id?.toString() ?? '1');
   }, [transactionTabIndex, transactions]);
 
-  const loadUsers = () => {
+  const loadUsers = useCallback(() => {
     fetch('/api/database/getUsers')
       .then(result => (result.ok ? result.json() : undefined))
       .then(setUsers)
       .catch(console.error)
       .finally(initUser);
-  };
+  }, [initUser]);
 
-  const loadTransactions = () => {
+  const loadTransactions = useCallback(() => {
     fetch('/api/database/getTransactions')
       .then(result => (result.ok ? result.json() : undefined))
       .then(setTransactions)
       .catch(console.error)
       .finally(initTransaction);
-  };
+  }, [initTransaction]);
 
   useEffect(() => {
-    if (window.location.hostname !== 'localhost') return;
+    if (location.hostname !== 'localhost') {
+      location.href = `/`;
+      return;
+    }
 
     loadUsers();
     loadTransactions();
     loadData(DataName.token).then(setTokens);
     setIsAuthorized(true);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [loadUsers, loadTransactions]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (transactions && tokens && !transactionTabIndex) {
@@ -123,7 +127,7 @@ export default function AdminPage() {
 
   useEffect(() => {
     const user = users?.find(user => user.id === Number(userIndex));
-    if (!!user && !!userTabIndex) {
+    if (user && userTabIndex) {
       setName(user.name);
       setAddress(user.address);
       setIsPublic(Boolean(user.ispublic));
@@ -134,7 +138,7 @@ export default function AdminPage() {
 
   useEffect(() => {
     const transaction = transactions?.find(transaction => transaction.id === Number(transactionIndex));
-    if (!!transaction && !!transactionTabIndex) {
+    if (transaction && transactionTabIndex) {
       setDate(new Date(transaction.date));
       setTransactionAddress(transaction.address);
       setTransactionType(TransactionType[getTransactionType(transaction)]);
@@ -154,7 +158,7 @@ export default function AdminPage() {
     const filteredTransactions = transactions
       ?.filter(transaction => transactionFilter === '0' || transaction.userid === Number(transactionFilter))
       .sort((a, b) => (b.id ?? 0) - (a.id ?? 0));
-    setTransactionIndex(filteredTransactions?.at(0)?.id?.toString() ?? '');
+    setTransactionIndex(filteredTransactions?.[0]?.id?.toString() ?? '');
 
     const userAddress = users?.find(
       user => user.id === Number(transactionFilter) && user.name !== user.address,
@@ -167,7 +171,7 @@ export default function AdminPage() {
           console.log(data);
           setCryptoTransactions(
             data.map((d: HeliusTransaction) => ({
-              date: new Date(d.timestamp * 1000).toLocaleString(),
+              date: new Date(d.timestamp * 1000),
               address: [
                 users.find(user => user.address === d.from)?.name ?? getShortAddress(d.from),
                 users.find(user => user.address === d.to)?.name ?? getShortAddress(d.to),
@@ -204,12 +208,20 @@ export default function AdminPage() {
 
   const isValidName = useMemo(
     () =>
-      (name.testLimit(nameLimit) && !users?.find(user => user.name.toLowerCase() === name.toLowerCase())) ||
-      userTabIndex,
-    [name, users, userTabIndex],
+      name.testLimit(nameLimit) &&
+      (!users?.find(user => user.name.toLowerCase() === name.toLowerCase()) ||
+        (userTabIndex &&
+          name.toLowerCase() === users?.find(user => user.id === Number(userIndex))?.name.toLowerCase())),
+    [name, users, userTabIndex, userIndex],
   );
   const isValidAddress = useMemo(() => {
-    if ((!address.testLimit(addressLimit) || users?.find(user => user.address === address)) && !userTabIndex)
+    if (
+      !(
+        address.testLimit(addressLimit) &&
+        (!users?.find(user => user.address === address) ||
+          (userTabIndex && address === users?.find(user => user.id === Number(userIndex))?.address))
+      )
+    )
       return false;
     try {
       const pubkey = new PublicKey(address);
@@ -217,7 +229,7 @@ export default function AdminPage() {
     } catch (error) {
       return false;
     }
-  }, [address, users, userTabIndex]);
+  }, [address, users, userTabIndex, userIndex]);
   const isValidTransaction = useMemo(
     () =>
       getTransactionDetails().value &&
@@ -520,34 +532,22 @@ export default function AdminPage() {
             icon={CurrencyEuroIcon}
             step={1}
             min={0}
-            max={10000}
+            max={100000}
             disabled={transactionTabIndex === 2}
-            error={(!!tokenAmount && !tokenPrice) || (!tokenAmount && !!tokenPrice)}
-            errorMessage="The token price / amount should be set!"
           />
-          <Flex
-            className={cls(
-              'max-w-sm min-w-32 space-x-2',
-              !isTransactionType(TransactionType.donation) ? 'visible' : 'hidden',
-            )}
-            flexDirection="row"
-            justifyContent="start"
-            alignItems="center"
-          >
-            <Switch
-              className={transactionTabIndex !== 2 ? 'visible' : 'hidden'}
-              checked={hasCost}
-              onChange={setHasCost}
-            />
-            <Text>{hasCost ? `Costs ${getTransactionDetails().cost.toLocaleCurrency()}` : 'Free'}</Text>
-          </Flex>
-          <Title className={isValidTransaction ? 'visible' : 'hidden'}>
-            {!isNaN(getTransactionDetails().value) ? getTransactionDetails().value.toCurrency() : 'Error'}
-          </Title>
+          <Switch
+            className={cls(!isTransactionType(TransactionType.donation) ? 'visible' : 'hidden', 'self-center')}
+            checked={hasCost}
+            onChange={setHasCost}
+            disabled={transactionTabIndex === 2}
+          />
+          <Text className={cls(!isTransactionType(TransactionType.donation) ? 'visible' : 'hidden', 'self-center')}>
+            Include cost
+          </Text>
           <Button
-            className="flex font-bold col-span-2"
+            className="flex font-bold self-center"
             disabled={!isValidTransaction}
-            style={{ borderRadius: 24, justifySelf: 'center' }}
+            style={{ borderRadius: 24 }}
             loading={transactionLoading}
             onClick={updateTransaction}
           >
@@ -555,43 +555,39 @@ export default function AdminPage() {
           </Button>
         </Grid>
       </Card>
-      <Card className={cls('col-span-2', cryptoTransactions ? 'visible' : 'hidden')}>
+
+      <Card className={cls(cryptoTransactions ? 'visible' : 'hidden')}>
         <Title>Crypto Transactions</Title>
-        <Table className="w-full">
+        <Table>
           <TableHead>
             <TableRow>
               <TableHeaderCell>Date</TableHeaderCell>
               <TableHeaderCell>Address</TableHeaderCell>
-              <TableHeaderCell>Type</TableHeaderCell>
+              <TableHeaderCell>Amount</TableHeaderCell>
               <TableHeaderCell>Token</TableHeaderCell>
+              <TableHeaderCell>Movement</TableHeaderCell>
               <TableHeaderCell>Cost</TableHeaderCell>
+              <TableHeaderCell>Type</TableHeaderCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {cryptoTransactions?.length ? (
-              cryptoTransactions.map(({ date, address, type, token, amount, cost }) => (
-                <TableRow key={new Date(date).getTime()}>
-                  <TableCell>{date.toLocaleString()}</TableCell>
-                  <TableCell>{address}</TableCell>
-                  <TableCell>{type !== undefined ? TransactionType[type].normalize() : ''}</TableCell>
-                  <TableCell>
-                    {amount?.toFixed(2)} {token}
-                  </TableCell>
-                  <TableCell>{cost.toLocaleCurrency()}</TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell className="text-center" colSpan={5}>
-                  Loading ...
-                </TableCell>
+            {cryptoTransactions?.map(({ date, address, amount, token, movement, cost, type }, index) => (
+              <TableRow key={index}>
+                <TableCell>{date.toLocaleString()}</TableCell>
+                <TableCell>{address}</TableCell>
+                <TableCell>{Number(amount).toDecimalPlace(2, 'down')}</TableCell>
+                <TableCell>{token}</TableCell>
+                <TableCell>{Number(movement).toDecimalPlace(2, 'down')}</TableCell>
+                <TableCell>{Number(cost).toDecimalPlace(2, 'down')}</TableCell>
+                <TableCell>{TransactionType[type]}</TableCell>
               </TableRow>
-            )}
+            ))}
           </TableBody>
         </Table>
       </Card>
     </Grid>
   ) : (
-    <NotFound />
+    <Loading />
   );
 }
+
