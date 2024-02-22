@@ -2,17 +2,17 @@ import { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'BARK Wallet - Porte-monnaie',
+    name: 'BARK Wallet - Dashboard',
     short_name: 'BARK Wallet',
-    description: 'Porte-monnaie pour gérer ses investissements avec BARK',
+    description: 'BARK Wallet is a secure and user-friendly wallet designed for managing BARK tokens on the Solana blockchain.',
     start_url: '/',
     scope: '/',
     lang: 'fr',
     display: 'fullscreen',
     display_override: ['window-controls-overlay'],
     orientation: 'portrait',
-    background_color: '#3367D6',
-    theme_color: '#3367D6',
+    background_color: '#03070E', // Updated background color
+    theme_color: '#3D4556', // Updated theme color
     icons: [
       {
         src: '/favicon.ico',
@@ -34,6 +34,10 @@ export default function manifest(): MetadataRoute.Manifest {
         type: 'image/png',
         sizes: '512x512',
       },
+    ],
+  };
+}
+
     ],
   };
 }
