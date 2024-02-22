@@ -1,4 +1,4 @@
-'use client';
+// 'use client';
 
 import GlobalError from './global-error';
 
@@ -9,5 +9,6 @@ export default function Error({
   error: Error;
   reset: () => void;
 }) {
-  return GlobalError({ error, reset });
+  // Render the GlobalError component with the provided error and reset function
+  return <GlobalError error={error} reset={reset} />;
 }
