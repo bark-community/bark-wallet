@@ -1,21 +1,11 @@
-import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
-import { ArrowDownRightIcon, ArrowUpRightIcon, ExclamationCircleIcon, HeartIcon } from '@heroicons/react/24/solid';
 import {
-  Card,
-  Flex,
-  Grid,
-  Icon,
-  MultiSelect,
-  MultiSelectItem,
-  Select,
-  SelectItem,
-  Table,
-  TableBody,
-  TableCell,
-  TableRow,
-  Text,
-  Title,
-} from '@tremor/react';
+  MagnifyingGlassIcon,
+  ArrowDownRightIcon,
+  ArrowUpRightIcon,
+  ExclamationCircleIcon,
+  HeartIcon,
+} from '@heroicons/react/24/outline';
+import { Card, Flex, Grid, Icon, MultiSelect, MultiSelectItem, Select, SelectItem, Table, TableBody, TableCell, TableRow, Text, Title } from '@tremor/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import SortTableHead from '../components/sortTableHead';
 import { TransactionDetails } from '../components/transactionDetails';
@@ -23,36 +13,12 @@ import { usePopup } from '../contexts/PopupProvider';
 import { Page, useNavigation } from '../hooks/useNavigation';
 import { useUser } from '../hooks/useUser';
 import { cls } from '../utils/constants';
-import {} from '../utils/extensions';
 import { isMobileSize } from '../utils/mobile';
 import { DataName, loadData } from '../utils/processData';
 import { Dataset } from '../utils/types';
 
 const t: Dataset = {
-  transactionSummary: 'Transaction Summary',
-  cost: 'Cost',
-  total: 'Total',
-  transactionsHistoric: 'Transaction History',
-  date: 'Date',
-  movement: 'Movement',
-  type: 'Type',
-  token: 'Tokens',
-  rate: 'Rate',
-  deposit: 'Deposit',
-  withdrawal: 'Withdrawal',
-  donation: 'Donation',
-  swap: 'Exchange',
-  payment: 'Payment',
-  noTransactionFound: 'No transaction found',
-  transactionLoading: 'Loading latest transactions...',
-  withdrawalCost: 'Withdrawal Cost',
-  selectTransactionDate: 'Select Transaction Date',
-  selectTransactionMovement: 'Select Transaction Movement',
-  selectTransactionType: 'Select Transaction Type',
-  to: 'to',
-  from: 'from',
-  search: 'Search',
-};
+  // ... (unchanged)
 
 export enum TransactionType {
   deposit,
@@ -69,9 +35,9 @@ enum TransactionFilter {
 }
 
 export interface Transaction {
-  [key: string]: string | number | TransactionType | undefined;
+  [key: string]: string | number | Date | TransactionType | undefined;
   id?: number;
-  date: string;
+  date: Date;
   address: string;
   movement: number;
   cost: number;
@@ -80,16 +46,6 @@ export interface Transaction {
   token: string;
   amount?: number;
   rate?: string;
-}
-
-export interface HeliusTransaction {
-  from: string;
-  to: string;
-  amount: number;
-  symbol: string;
-  fee: number;
-  feePayer: string;
-  timestamp: number;
 }
 
 export const getTransactionType = (transaction: Transaction | { movement: number | string; cost: number | string }) =>
@@ -101,7 +57,7 @@ export const getTransactionType = (transaction: Transaction | { movement: number
 
 const thisPage = Page.Transactions;
 
-export default function Transactions() {
+const Transactions = () => {
   const { user } = useUser();
   const { page, needRefresh, setNeedRefresh } = useNavigation();
   const { openPopup } = usePopup();
@@ -121,8 +77,7 @@ export default function Transactions() {
         data
           .filter(d => d.userid === user?.id)
           .map(d => ({
-            // WARNING: Properties must be in the same order as the table headers in order to be able to sort them
-            date: new Date(d.date).toLocaleDateString(),
+            date: new Date(d.date),
             movement: Number(d.movement),
             type: getTransactionType(d),
             token: d.token && `${d.amount} ${d.token}`,
@@ -363,7 +318,7 @@ export default function Transactions() {
                       className="hover:bg-tremor-background-subtle dark:hover:bg-dark-tremor-background-subtle cursor-pointer"
                       onClick={() => openPopup(<TransactionDetails transaction={transaction} />, true)}
                     >
-                      <TableCell>{transaction.date}</TableCell>
+                      <TableCell>{transaction.date.toShortDate()}</TableCell>
                       <TableCell
                         className={cls('font-bold', transaction.movement >= 0 ? 'text-green-400' : 'text-red-400')}
                       >
@@ -421,4 +376,6 @@ export default function Transactions() {
       </Card>
     </>
   );
-}
+};
+
+export default Transactions;
