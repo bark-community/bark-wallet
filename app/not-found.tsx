@@ -8,7 +8,7 @@ export default function NotFound() {
       <div
         className={cls(
           'container mt-10 flex flex-col justify-center font-bold',
-          'uppercase text-[3vmin] text-center text-secondary-light dark:text-secondary-dark'
+          'uppercase text-[3vmin] text-center text-secondary-light dark:text-secondary-dark',
         )}
       >
         <div className="row">
@@ -19,7 +19,7 @@ export default function NotFound() {
                   <path
                     id="Vector"
                     d="M101.3 255.2C101.3 255.2 111.1 272.6 181.8 280.5C252.5 288.4 288.2 314.9 333.1 322.8C378 330.7 433.6 278.5 481.8 286.5C530 294.4 588.2 264.2 592.8 255.2H101.3Z"
-                    fill="#020607"
+                    fill="#2F1829"
                   />
                   <path
                     id="Vector_2"
@@ -45,7 +45,7 @@ export default function NotFound() {
                   <path
                     id="Vector_6"
                     d="M631.8 258.5H75.5C73.6 258.5 72.1 257 72.1 255.1C72.1 253.2 73.6 251.7 75.5 251.7H631.8C633.7 251.7 635.2 253.2 635.2 255.1C635.2 257 633.7 258.5 631.8 258.5Z"
-                    fill="#020607"
+                    fill="#2F1829"
                   />
                   <path
                     id="Vector_7"
@@ -72,12 +72,12 @@ export default function NotFound() {
                   <path
                     id="Vector_11"
                     d="M461 295.7C461 295.7 425 303.6 415.8 315.9C411.3 321.9 429.2 321 444.5 314.4C460.5 307.5 473.6 294.9 461 295.7Z"
-                    fill="#020607"
+                    fill="#2F1829"
                   />
                   <path
                     id="Vector_12"
                     d="M200.2 293.4C200.2 293.4 214.2 293.1 226.5 297.9C238.8 302.7 241.5 317.4 229.2 319.2C217 321 189.1 304.7 190.7 298.1C191.9 293.1 200.2 293.4 200.2 293.4Z"
-                    fill="#020607"
+                    fill="#2F1829"
                   />
                 </g>
                 <path
@@ -215,7 +215,7 @@ export default function NotFound() {
                       <path
                         id="Vector_34"
                         d="M528.9 186.5L526.3 188.9C525.9 189.2 526.1 189.8 526.5 190L528.7 190.7L533.7 196.2C533.9 196.4 534.3 196.5 534.5 196.2L535.3 195.4C535.5 195.2 535.6 194.8 535.3 194.6L530.3 189.1L529.8 186.9C529.8 186.3 529.2 186.1 528.9 186.5Z"
-                        fill="#020607"
+                        fill="#2F1829"
                       />
                       <path
                         id="Vector_35"
@@ -237,7 +237,7 @@ export default function NotFound() {
                     <path
                       id="Vector_38"
                       d="M571.4 194.7C570.3 195.1 568.9 195.3 567 194.9C566.7 194.8 566.5 194.8 566.3 194.6C564.7 193.7 565.3 191 566.4 188.6C566.5 188.3 566.7 188 566.8 187.8L571 185.1C571 185.1 571.3 189.8 571.4 194.7Z"
-                      fill="#020607"
+                      fill="#2F1829"
                     />
                     <path
                       id="Vector_39"
@@ -342,7 +342,7 @@ export default function NotFound() {
                     <path
                       id="Vector_56"
                       d="M570.3 238.7C569.4 239.3 563.3 239.9 563.3 239.9L563.1 238.8L562 232.1L559.3 216.4L556.6 236.1L555.8 241.9C555.8 241.9 548.3 242.3 548.3 240.5C548.3 240.3 548.3 239.5 548.4 238.2C548.6 230.2 549.5 203.9 549.7 198C550 198.6 550.7 199 551.7 199.1C551.8 199.1 551.9 199.1 552 199.1C555.8 199.7 566.5 200.6 569.1 199.4C569.2 200.4 569.3 201.9 569.4 203.8C569.8 211.4 570.1 225.2 570.3 232.9C570.3 236.4 570.3 238.7 570.3 238.7Z"
-                      fill="#020607"
+                      fill="#2F1829"
                     />
                     <path
                       id="Vector_57"
@@ -468,7 +468,7 @@ export default function NotFound() {
                     <path
                       id="Vector_73"
                       d="M548.7 190C548 190.9 547.2 192 546.3 193.1C544.4 192 542.9 190 542 188.8C542.8 187.4 543.6 185.7 544 184.9C544.5 185.7 545.3 186.7 546.2 187.6C547.2 188.8 548.2 189.8 548.7 190Z"
-                      fill="#020607"
+                      fill="#2F1829"
                     />
                     <path
                       id="Vector_74"
@@ -544,7 +544,7 @@ export default function NotFound() {
                     <path
                       id="Vector_86"
                       d="M98.7 161.9C98.7 162.2 98.6 162.7 98.4 163.3C98.3 163.6 98.1 164 98 164.3C97.2 166.1 95.9 168.1 95.6 168.2C95.2 168.3 95 165 93.8 164.8C92.6 164.5 92.4 166.8 93.2 167.6C93.6 168 93.3 168.9 92.7 169.7C92 170.5 91 171.1 89.9 170.4C87.9 169.2 87.5 161.4 87.5 160.8C87.5 160.8 87.5 160.3 87.6 159.6C87.8 158.6 88.5 157.4 90.2 156.6C93.2 155.3 98.7 155.6 98.7 161.9Z"
-                      fill="#020607"
+                      fill="#2F1829"
                     />
                     <path
                       id="Vector_87"
@@ -628,7 +628,7 @@ export default function NotFound() {
                     <path
                       id="Vector_97"
                       d="M99.9 242.3C99.8 242.5 99.8 242.7 99.7 242.8C98.6 244.7 95.6 244.9 94.5 244.5C94.4 244.5 94.2 244.4 94.2 244.3C93.5 243.7 93 238.9 89.4 211.7C89.4 211.8 89.4 211.8 89.4 211.9C89.3 215.8 88.5 222.6 87.7 228.9C86.8 235.9 85.8 242.2 85.6 243.2C85.6 243.5 85.4 243.8 85.2 244.1C84.2 245.2 81.7 245.5 80.2 243.7C80.1 243.6 80 243.4 79.9 243.2C80.5 238.2 80.8 222.8 79.8 213.6C79.4 210.2 79.4 207.2 79.5 204.8C79.6 202.3 79.9 200.5 80.1 199.5C83.9 203.3 93.1 201.3 97 199.6C97.6 199.3 98 199.1 98.3 198.9C99.3 203.5 98.9 216.4 99.9 242.3Z"
-                      fill="#020607"
+                      fill="#2F1829"
                     />
                     <path
                       id="Vector_98"
@@ -661,7 +661,7 @@ export default function NotFound() {
                       <path
                         id="Vector_103"
                         d="M123.9 189.6L121.4 187.1C121 186.7 120.4 186.9 120.3 187.4L119.7 189.6L114.4 194.9C114.2 195.1 114.2 195.5 114.4 195.7L115.2 196.5C115.4 196.7 115.8 196.7 116 196.5L121.3 191.2L123.5 190.6C124.1 190.6 124.3 190 123.9 189.6Z"
-                        fill="#020607"
+                        fill="#2F1829"
                       />
                       <path
                         id="Vector_104"
@@ -691,7 +691,7 @@ export default function NotFound() {
                       <path
                         id="Vector_108"
                         d="M89.6 161.6C89.6 161.6 88.8 159.9 86.1 160.4C83.5 160.9 82.3 164.3 83.5 169.8C83.5 164.9 84.2 163.8 84.2 163.8C84.2 163.8 83.1 166.8 84.5 173.5C85.9 180.2 86.8 186.7 83.2 189.5C90.3 185.5 90.8 180.7 90.3 174.9C90 169.1 91.3 164 89.6 161.6Z"
-                        fill="#020607"
+                        fill="#2F1829"
                       />
                     </g>
                     <path
@@ -797,7 +797,7 @@ export default function NotFound() {
                 <path
                   id="Vector_123"
                   d="M592.4 253C591.7 252.5 570.9 196.3 594.9 164.3C591.6 186.9 593.4 205.4 593.4 205.4L590.3 208.5L593.8 209.5C593.8 209.5 596.1 240.9 597.3 244.5C594.7 221 601.1 207.3 601.1 207.3C601.1 207.3 600 224 602.1 230.1L600.4 232.3L602.1 232C602.1 232 600.9 242.1 602.1 245.1C602.1 245.1 615.5 205.1 609.2 187.5C617.5 200.3 615.1 221.8 615.1 221.8L613 222.6L614.3 223.6C614.3 223.6 610.8 246.5 602.9 252.9"
-                  fill="#020607"
+                  fill="#2F1829"
                 />
                 <g id="Group_25">
                   <path
@@ -889,7 +889,7 @@ export default function NotFound() {
                   <path
                     id="Vector_137"
                     d="M423.7 253C423.5 252.9 417.7 237.1 424.4 228.1C423.5 234.5 424 239.7 424 239.7L423.1 240.6L424.1 240.9C424.1 240.9 424.8 249.7 425.1 250.8C424.4 244.2 426.2 240.3 426.2 240.3C426.2 240.3 425.9 245 426.5 246.7L426 247.3L426.5 247.2C426.5 247.2 426.2 250 426.5 250.9C426.5 250.9 430.3 239.7 428.5 234.7C430.8 238.3 430.2 244.3 430.2 244.3L429.6 244.5L430 244.8C430 244.8 429 251.2 426.8 253"
-                    fill="#020607"
+                    fill="#2F1829"
                   />
                 </g>
                 <g id="Group_32">
@@ -961,7 +961,7 @@ export default function NotFound() {
                   <path
                     id="Vector_148"
                     d="M262.9 254.5C262.9 254.5 253.9 238.6 256.6 223.2C259.2 235.3 265.7 243.3 265.7 243.3L263.1 245.4H265.7L271.3 256.1L263.7 254.5V255.2L262.9 254.5Z"
-                    fill="#020607"
+                    fill="#2F1829"
                   />
                 </g>
               </g>
@@ -1040,7 +1040,7 @@ export default function NotFound() {
                   y2="148.447"
                   gradientUnits="userSpaceOnUse"
                 >
-                  <stop stopColor="#020607" />
+                  <stop stopColor="#2F1829" />
                   <stop offset="1" stopColor="#3B223C" />
                 </linearGradient>
                 <linearGradient
@@ -1051,7 +1051,7 @@ export default function NotFound() {
                   y2="146.691"
                   gradientUnits="userSpaceOnUse"
                 >
-                  <stop stopColor="#020607" />
+                  <stop stopColor="#2F1829" />
                   <stop offset="1" stopColor="#3B223C" />
                 </linearGradient>
                 <linearGradient
@@ -1062,7 +1062,7 @@ export default function NotFound() {
                   y2="144.941"
                   gradientUnits="userSpaceOnUse"
                 >
-                  <stop stopColor="#020607" />
+                  <stop stopColor="#2F1829" />
                   <stop offset="1" stopColor="#3B223C" />
                 </linearGradient>
                 <linearGradient
@@ -1073,7 +1073,7 @@ export default function NotFound() {
                   y2="109.089"
                   gradientUnits="userSpaceOnUse"
                 >
-                  <stop stopColor="#020607" />
+                  <stop stopColor="#2F1829" />
                   <stop offset="1" stopColor="#3B223C" />
                 </linearGradient>
                 <linearGradient
@@ -1178,7 +1178,7 @@ export default function NotFound() {
               </defs>
             </svg>
           </div>
-          <p className="px-6 cursor-pointer">Perdu ? Retour à l&apos;envoyeur !</p>
+          <p className="px-6 cursor-pointer">Lost? Return to the sender!</p>
         </div>
       </div>
     </Link>
