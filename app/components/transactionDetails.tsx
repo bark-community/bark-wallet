@@ -23,27 +23,23 @@ export const TransactionDetails = ({ transaction }: { transaction: Transaction }
   const { closePopup } = usePopup();
 
   const renderTransactionDetail = (item: string, index: number) => {
+    const isCost = item === 'cost';
     const isNumeric = !isNaN(Number(transaction[item]));
-    
-    // Only render the details if the condition is met
-    if (transaction[item] !== undefined && (transaction.type !== TransactionType.donation || item !== 'cost')) {
-      return (
-        <ListItem key={index}>
-          <span>{t[item]}</span>
-          <span className={cls('font-bold', isNumeric ? (Number(transaction[item]) >= 0 ? 'text-green-400' : 'text-red-400') : '')}>
-            {isNumeric ? Number(transaction[item]).toLocaleCurrency() : String(transaction[item])}
-          </span>
-        </ListItem>
-      );
-    }
 
-    return null;
+    return transaction[item] !== undefined ? (
+      <ListItem key={index}>
+        <span>{t[item]}</span>
+        <span className={cls('font-bold', isNumeric ? (isCost ? 'text-red-400' : 'text-green-400') : '')}>
+          {isNumeric ? Number(transaction[item]).toLocaleCurrency() : String(transaction[item])}
+        </span>
+      </ListItem>
+    ) : null;
   };
 
   return (
     <>
       <Title className="text-center mb-2">
-        {t[TransactionType[transaction.type ?? 0]]} {t.from} {transaction.date.toShortDate()}
+        {TransactionType[transaction.type ?? TransactionType.Unknown]} {t.from} {transaction.date.toShortDate()}
       </Title>
       <List>{['movement', 'cost', 'token', 'rate'].map(renderTransactionDetail)}</List>
       <Flex justifyContent="center" className="mt-6">
@@ -55,7 +51,3 @@ export const TransactionDetails = ({ transaction }: { transaction: Transaction }
   );
 };
 
-
-    </>
-  );
-};
