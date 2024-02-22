@@ -7,7 +7,7 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'BARK Wallet is a secure and user-friendly wallet designed for managing BARK tokens on the Solana blockchain.',
     start_url: '/',
     scope: '/',
-    lang: 'fr',
+    lang: 'en',
     display: 'fullscreen',
     display_override: ['window-controls-overlay'],
     orientation: 'portrait',
